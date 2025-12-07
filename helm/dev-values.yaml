@@ -1,0 +1,35 @@
+#
+# configMap
+#   Array of key, value.
+#   Enable to create configMap.
+#
+#   The resource name will be same as your project name.
+#   Baware of value type is always be string.
+#
+configMaps:
+  create: false
+  data:
+    PORT: '3000'
+    DB_TYPE: 'postgres'
+    DB_HOST: '' #secret
+    DB_PORT: '5432',
+    DB_USERNAME: '' #secret
+    DB_PASSWORD: '' #secret
+    DB_DATABASE: 'shop_sabuy'
+    DB_SYNCHRONIZE: 'true'
+    JWT_ACCESS_TOKEN_EXPIRED: '10800' #seconds
+    JWT_REFRESH_TOKEN_EXPIRED: '2592000' #seconds
+    JWT_SECRET: '' #secret
+    OTP_EXPIRY_TIME_IN_SECOND: '300' #seconds
+    AWS_ACCESS_KEY: '' #secret
+    AWS_SECRET_ACCESS_KEY: '' #secret
+    BUCKET_REGION: 'ap-southeast-1'
+    BUCKET_NAME: 'dev-tlt-scommercesolution-app-resource'
+    RESOURCE_DOMAIN: 'https://dex7j3chxm11u.cloudfront.net'
+    TLT_ENDPOINT: 'https://www.tlt.co.th'
+    TLT_API_KEY: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJyZWYiOiJXWTRtTE9reSIsImNsaWVudF9pZCI6InRsdC02MzI0MjgwNiIsInJvbGUiOiJwcm9kdWN0cyIsIm5hbWUiOiJUTFQiLCJjb2RlIjoiJDEkRnhLRFwvWkx1JFBnOXdDSlNCRlZUT29sS0dXZzRvWTAiLCJleHQiOjE2Mzg2ODA3MjgsInJmdCI6ImMyNDU1MDVmLTI0NjAtNTMzMi05OWFjLWMxOTZlNTkxZDJjMyJ9.pZwKlrV7TMJNCE6d1hxDFKvsDjhD_kAPGZbywAftSHkeyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJyZWYiOiJXWTRtTE9reSIsImNsaWVudF9pZCI6InRsdC02MzI0MjgwNiIsInJvbGUiOiJwcm9kdWN0cyIsIm5hbWUiOiJUTFQiLCJjb2RlIjoiJDEkRnhLRFwvWkx1JFBnOXdDSlNCRlZUT29sS0dXZzRvWTAiLCJleHQiOjE2Mzg2ODA3MjgsInJmdCI6ImMyNDU1MDVmLTI0NjAtNTMzMi05OWFjLWMxOTZlNTkxZDJjMyJ9.pZwKlrV7TMJNCE6d1hxDFKvsDjhD_kAPGZbywAftSHk'
+    ONLINE_APP_PRE_SELECT_ENDPOINT: 'https://pksuat.tlt.co.th/onlineappapiexternal/car/preselect'
+    ONLINE_APP_GET_TOKEN_ENDPOINT: 'https://pksdev.tlt.co.th/tltauthenticationapi/authentication/token/generate'
+    ONLINE_APP_AUTH_PROJECT_NAME: 'ShopSabuyECommerce'
+    ONLINE_APP_AUTH_SECRET_KEY: '' #secret
+    ONLINE_APP_AUTH_CLIENT_KEY: '' #secret

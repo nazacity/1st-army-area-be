@@ -1,0 +1,33 @@
+{
+  "subStatus": {
+    "confirmed": "Confirmed",
+    "registered": "Registered",
+    "processing": "Processing",
+    "checking": "Checking",
+    "completed": "Completed",
+    "canceled": "Canceled"
+  },
+  "subStatusLevel2": {
+    "สมัครบริการเรียบร้อย": "Registered",
+    "รอเจ้าหน้าที่ติดต่อกลับ": "Staff will contact you back",
+    "ยืนยันสมัครสินเชื่อ": "Loan confirmed",
+    "สินค้าถูกยกเลิก": "Cancel",
+    "ยืนยันการซื้อสินค้า": "Product confirmed",
+    "ยืนยันการขอสินเชื่อรถออนไลน์": "Product confirmed",
+    "กำลังสมัคร": "Applying application",
+    "รอพิจารณา": "Under consideration",
+    "รอยืนยันตัวตน": "Verifying",
+    "รอยืนยันข้อมูล": "Waiting for confirm data",
+    "เพิ่มเงื่อนไขสินเชื่อ": "More Condition",
+    "อนุมัติรอเลื่อนผู้แทนจำหน่าย": "Approved waiting for dealer selection",
+    "อนุมัติ รอยืนยันที่อยู่": "Approved waiting for verify addresses",
+    "ดีลเลอร์เตรียมรถส่งมอบ": "Waiting for car preparation",
+    "เตรียมพร้อมส่งมอบรถ": "Car preparation",
+    "รอส่งมอบรถ": "Waiting for car delivering",
+    "พร้อมส่งมอบรถ": "Ready to deliver car",
+    "ทำรายการสำเร็จ": "Completed",
+    "สินเชื่อไม่อนุมติ": "Rejected",
+    "ลูกค้าทำการยกเลิกสินค้า": "Cancel",
+    "สมัครสินเชื่อเรียบร้อย": "Completed"
+  }
+}
