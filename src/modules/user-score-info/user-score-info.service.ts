@@ -9,7 +9,7 @@ import {
 } from './dto/user-score-info.dto'
 import { paginationUtil } from 'src/utils/pagination'
 import * as _ from 'lodash'
-import { UserScoreHistory } from '../user-score-history/entities/user-score-history.entity'
+import * as dayjs from 'dayjs'
 
 @Injectable()
 export class UserScoreInfoService {
@@ -83,32 +83,45 @@ export class UserScoreInfoService {
     try {
       const { take, skip } = paginationUtil(query)
 
+      const startDate = dayjs()
+        .set('month', query.month)
+        .startOf('month')
+        .toDate()
+      const endDate = dayjs().set('month', query.month).endOf('month').toDate()
+
       const baseQb = this.userScoreInfoRepository
         .createQueryBuilder('userScoreInfo')
-        .leftJoin('userScoreInfo.history', 'history')
+        .leftJoin('userScoreInfo.user', 'u')
+        // 👇 เงื่อนไขช่วงวันที่ไปอยู่ใน ON ของ LEFT JOIN แทน
+        .leftJoin(
+          'userScoreInfo.history',
+          'history',
+          'history.createdAt BETWEEN :startDate AND :endDate',
+          { startDate, endDate },
+        )
         .select('userScoreInfo.id', 'id')
         .addSelect('COALESCE(SUM(history.distance), 0)', 'sumDistance')
         .where('userScoreInfo.isDeleted = CAST(:isDeleted AS BOOLEAN)', {
           isDeleted: false,
         })
-        .andWhere('history.createdAt BETWEEN :startDate AND :endDate', {
-          startDate: query.startDate,
-          endDate: query.endDate,
-        })
-        .groupBy('userScoreInfo.id')
 
-      // ดึงทั้งหมดก่อน + เรียงตาม sumDistance ใน DB
+      if (query.base) {
+        baseQb.andWhere('u.base = :base', { base: query.base })
+      }
+
+      baseQb.groupBy('userScoreInfo.id')
+
+      // ---------- ดึงทั้งหมด + sort ที่ DB แล้วค่อย slice ----------
       const allRows = await baseQb
         .clone()
-        .orderBy('COALESCE(SUM(history.distance), 0)', 'DESC')
+        .orderBy('COALESCE(SUM(history.distance), 0)', 'DESC') // sort ตาม sum ของเดือน
         .addOrderBy('userScoreInfo.createdAt', 'DESC')
         .getRawMany<{ id: string; sumDistance: string }>()
 
       const total = allRows.length
 
-      // paginate ฝั่ง JS แทน
+      // paginate ฝั่ง JS
       const rows = allRows.slice(skip, skip + take)
-
       const ids = rows.map((r) => r.id)
 
       if (!ids.length) {
@@ -118,22 +131,20 @@ export class UserScoreInfoService {
         }
       }
 
-      // โหลด entity จริง + relations
       const entities = await this.userScoreInfoRepository.find({
         where: {
           id: In(ids),
           isDeleted: false,
-          history: {
-            createdAt: Between(query.startDate, query.endDate),
-          },
-        },
-        order: {
-          createdAt: 'DESC',
-          history: { createdAt: 'DESC' },
+          // จะใส่ filter base ซ้ำตรงนี้ก็ได้เพื่อความชัวร์
+          ...(query.base && { user: { base: query.base } }),
         },
         relations: {
           user: true,
           history: true,
+        },
+        order: {
+          createdAt: 'DESC',
+          history: { createdAt: 'DESC' },
         },
       })
 
@@ -146,14 +157,22 @@ export class UserScoreInfoService {
       // map: id -> entity
       const entityMap = new Map(entities.map((e) => [e.id, e]))
 
-      // ประกอบผลลัพธ์ตามลำดับ rows (ซึ่ง sort+paginate แล้ว)
+      // ประกอบผลลัพธ์ ตามลำดับ ids (ซึ่ง sort + paginate แล้ว)
       const data = ids
         .map((id) => {
           const entity = entityMap.get(id)
           if (!entity) return null
+
+          // filter history ให้เหลือเฉพาะของเดือนนั้น
+          const filteredHistory = entity.history.filter((h) => {
+            const created = new Date(h.createdAt)
+            return created >= startDate && created <= endDate
+          })
+
           return {
             ...entity,
-            sumDistance: sumMap[id] ?? 0,
+            history: filteredHistory, // ถ้าไม่มีในเดือนนี้ → []
+            sumDistance: sumMap[id] ?? 0, // ถ้าไม่มี history เลย → 0
           }
         })
         .filter((v): v is NonNullable<typeof v> => !!v)

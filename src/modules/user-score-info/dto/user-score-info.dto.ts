@@ -1,5 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IsDateString, IsNotEmpty, IsNumber } from 'class-validator'
+import {
+  IsDateString,
+  IsNotEmpty,
+  IsNumber,
+  IsNumberString,
+  IsOptional,
+  IsString,
+} from 'class-validator'
+import { UserBase } from 'src/modules/user/entities/user.entity'
 import { PaginationDto } from 'src/utils/pagination'
 
 export class UserScoreInfoCreateDto {}
@@ -20,16 +28,17 @@ export class UserScoreInfoQueryDto extends PaginationDto {}
 
 export class UserScoreInfoByPublicQueryDto extends PaginationDto {
   @ApiProperty({
-    default: new Date(),
+    default: 8,
   })
   @IsNotEmpty()
-  @IsDateString()
-  startDate: Date
+  @IsNumberString()
+  month: number
 
   @ApiProperty({
-    default: new Date(),
+    required: false,
+    enum: UserBase,
   })
-  @IsNotEmpty()
-  @IsDateString()
-  endDate: Date
+  @IsOptional()
+  @IsString()
+  base: string
 }

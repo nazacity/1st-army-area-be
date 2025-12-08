@@ -17,7 +17,7 @@ export class UserScoreInfoController {
   constructor(private readonly userScoreInfoService: UserScoreInfoService) {}
 
   @Get()
-  async getUserScoreInfoByPublicScoreId(
+  async getUserScoreInfoByPublic(
     @Query() query: UserScoreInfoByPublicQueryDto,
   ): Promise<ResponseModel<UserScoreInfo[]>> {
     try {
