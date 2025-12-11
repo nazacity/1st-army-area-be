@@ -63,7 +63,7 @@ export class R2Controller {
     description: '#### Only 1 image is allow',
   })
   @UseInterceptors(ImageFileInterceptor)
-  @Post('/profile-image')
+  @Post('/score-image')
   async uploadScoreImage(
     @UploadedFile() image: Express.Multer.File,
   ): Promise<ResponseModel<ResourceUrl>> {

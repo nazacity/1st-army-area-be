@@ -103,6 +103,7 @@ export class R2Service {
       )}.r2.cloudflarestorage.com`,
       region: 'auto',
     })
+
     try {
       const fileName = `${new Date().getTime()}-${S3Utils.removeWhiteSpace(
         file.originalname,
