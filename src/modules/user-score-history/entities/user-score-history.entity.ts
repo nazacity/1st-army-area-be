@@ -12,7 +12,7 @@ export class UserScoreHistory extends GlobalEntity {
   @Column({ default: 0 })
   time: number
 
-  @Column({ default: 0 })
+  @Column({ default: 0, type: 'float' })
   distance: number
 
   @Column({ default: '' })

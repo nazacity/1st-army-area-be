@@ -69,17 +69,28 @@ export class UserController {
   }
 
   @Post()
-  async createUser(
-    @Body() userCreateDto: UserCreateDto,
-  ): Promise<ResponseModel<User>> {
+  async createUser(@Body() userCreateDto: UserCreateDto): Promise<
+    ResponseModel<{
+      token: AuthTokenModel
+      user: Partial<User>
+    }>
+  > {
     try {
       const score = await this.userScoreInfoService.createUserScoreInfo({})
-      const createUser = await this.userService.createUser({
+      const createdUser = await this.userService.createUser({
         ...userCreateDto,
         score,
       })
 
-      return { data: createUser }
+      if (createdUser) {
+        const accessToken = await this.getNewToken({
+          id: createdUser.id,
+        })
+
+        return {
+          data: { token: accessToken, user: createdUser },
+        }
+      }
     } catch (error) {
       throw new HttpException(
         {
@@ -97,18 +108,21 @@ export class UserController {
   }
 
   @ApiBearerAuth('User Authorization')
-  @Patch('/:userId')
+  @UseGuards(UserJwtAuthGuard)
+  @Patch('')
   async updateUser(
-    @Param('userId', new ParseUUIDPipe()) userId: string,
+    @Request() req: RequestClinicUserModel,
     @Body() userUpdateDto: UserUpdateDto,
   ): Promise<ResponseModel<User>> {
     try {
       const updatedUser = await this.userService.updateUser({
-        id: userId,
+        id: req.user.id,
         userUpdate: userUpdateDto,
       })
 
-      return { data: updatedUser }
+      const user = await this.userService.getUserById(updatedUser.id)
+
+      return { data: user }
     } catch (error) {
       throw new HttpException(
         {

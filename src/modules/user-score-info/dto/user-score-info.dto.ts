@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
 import {
-  IsDateString,
   IsNotEmpty,
   IsNumber,
   IsNumberString,
@@ -26,13 +25,22 @@ export class UserScoreInfoUpdateDto {
 
 export class UserScoreInfoQueryDto extends PaginationDto {}
 
+export class UserScoreInfoByUserQueryDto extends PaginationDto {}
+
 export class UserScoreInfoByPublicQueryDto extends PaginationDto {
   @ApiProperty({
-    default: 8,
+    default: 11,
   })
   @IsNotEmpty()
   @IsNumberString()
   month: number
+
+  @ApiProperty({
+    default: 2025,
+  })
+  @IsNotEmpty()
+  @IsNumberString()
+  year: number
 
   @ApiProperty({
     required: false,

@@ -26,6 +26,9 @@ export class UserService {
       const [users, total] = await this.userRepository.findAndCount({
         where: {
           isDeleted: false,
+          ...(query.base && {
+            base: query.base,
+          }),
         },
         order: {
           createdAt: 'DESC',

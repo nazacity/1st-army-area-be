@@ -4,6 +4,7 @@ import { UserScoreInfo } from './entities/user-score-info.entity'
 import { Between, In, Repository } from 'typeorm'
 import {
   UserScoreInfoByPublicQueryDto,
+  UserScoreInfoByUserQueryDto,
   UserScoreInfoCreateDto,
   UserScoreInfoUpdateDto,
 } from './dto/user-score-info.dto'
@@ -85,9 +86,14 @@ export class UserScoreInfoService {
 
       const startDate = dayjs()
         .set('month', query.month)
+        .set('year', query.year)
         .startOf('month')
         .toDate()
-      const endDate = dayjs().set('month', query.month).endOf('month').toDate()
+      const endDate = dayjs()
+        .set('month', query.month)
+        .set('year', query.year)
+        .endOf('month')
+        .toDate()
 
       const baseQb = this.userScoreInfoRepository
         .createQueryBuilder('userScoreInfo')

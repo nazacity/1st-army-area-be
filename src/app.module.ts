@@ -18,6 +18,7 @@ import { AdminModule } from './modules/admin/admin.module'
 import { R2Module } from './modules/r2/r2.module'
 import { UserScoreInfoModule } from './modules/user-score-info/user-score-info.module';
 import { UserScoreHistoryModule } from './modules/user-score-history/user-score-history.module';
+import { SummaryModule } from './modules/summary/summary.module';
 
 // Scheduler
 
@@ -71,6 +72,7 @@ import { UserScoreHistoryModule } from './modules/user-score-history/user-score-
     R2Module,
     UserScoreInfoModule,
     UserScoreHistoryModule,
+    SummaryModule,
   ],
   providers: [
     {

@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator'
 import { PaginationDto } from 'src/utils/pagination'
-import { UserGender } from '../entities/user.entity'
+import { UserBase, UserGender } from '../entities/user.entity'
 import { UserScoreInfo } from 'src/modules/user-score-info/entities/user-score-info.entity'
 
 export class UserCreateDto {
@@ -74,7 +74,37 @@ export class UserUpdateDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
-  lineId: string
+  rank: string
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsString()
+  firstName: string
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsString()
+  lastName: string
+
+  @ApiProperty({
+    default: UserGender.male,
+  })
+  @IsNotEmpty()
+  @IsEnum(UserGender)
+  gender: UserGender
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsString()
+  base: string
 }
 
-export class UserQueryDto extends PaginationDto {}
+export class UserQueryDto extends PaginationDto {
+  @ApiProperty({
+    required: false,
+    enum: UserBase,
+  })
+  @IsOptional()
+  @IsString()
+  base?: string
+}

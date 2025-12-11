@@ -37,12 +37,37 @@ export class AuthController {
     try {
       const user = await this.userService.getUserByLineId(userLoginDto.lineId)
 
-      const accessToken = await this.authService.getNewToken({
-        id: user.id,
-      })
+      if (user) {
+        if (userLoginDto.profileImageUrl && userLoginDto.displayName) {
+          const updatedUser = await this.userService.updateUser({
+            id: user.id,
+            userUpdate: {
+              ...user,
+              displayName: userLoginDto.displayName,
+              profileImageUrl: userLoginDto.profileImageUrl,
+            },
+          })
+
+          const accessToken = await this.authService.getNewToken({
+            id: user.id,
+          })
+
+          return {
+            data: { token: accessToken, user: updatedUser },
+          }
+        } else {
+          const accessToken = await this.authService.getNewToken({
+            id: user.id,
+          })
+
+          return {
+            data: { token: accessToken, user: user },
+          }
+        }
+      }
 
       return {
-        data: { token: accessToken, user: user },
+        data: { token: undefined, user: undefined },
       }
     } catch (error) {
       throw new HttpException(

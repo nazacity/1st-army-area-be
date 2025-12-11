@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { UserScoreHistory } from './entities/user-score-history.entity'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
+import { Between, Repository } from 'typeorm'
 import {
   UserScoreHistoryByUserScoreIdQueryDto,
   UserScoreHistoryCreate,
@@ -10,6 +10,7 @@ import {
   UserScoreHistoryUpdateDto,
 } from './dto/user-score-history.dto'
 import { paginationUtil } from 'src/utils/pagination'
+import * as dayjs from 'dayjs'
 
 @Injectable()
 export class UserScoreHistoryService {
@@ -27,10 +28,29 @@ export class UserScoreHistoryService {
     try {
       const { take, skip } = paginationUtil(query)
 
+      const startDate = dayjs()
+        .set('month', query.month)
+        .set('year', query.year)
+        .startOf('month')
+        .toDate()
+      const endDate = dayjs()
+        .set('month', query.month)
+        .set('year', query.year)
+        .endOf('month')
+        .toDate()
+
       const [userScoreHistorys, total] =
         await this.userScoreHistoryRepository.findAndCount({
           where: {
             isDeleted: false,
+            createdAt: Between(startDate, endDate),
+            ...(query.base && {
+              scoreInfo: {
+                user: {
+                  base: query.base,
+                },
+              },
+            }),
           },
           order: {
             createdAt: 'DESC',

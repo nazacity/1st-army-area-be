@@ -31,7 +31,7 @@ export class UserScoreHistoryController {
 
   @ApiBearerAuth('User Authorization')
   @UseGuards(UserJwtAuthGuard)
-  @Get()
+  @Get('/user')
   async getUserScoreHistoryByUserScoreId(
     @Request() req: RequestClinicUserModel,
     @Query() query: UserScoreHistoryByUserScoreIdQueryDto,
