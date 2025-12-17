@@ -67,6 +67,8 @@ export class R2Controller {
   async uploadScoreImage(
     @UploadedFile() image: Express.Multer.File,
   ): Promise<ResponseModel<ResourceUrl>> {
+    console.log(image)
+
     const data = await this.r2Service.uploadScoreImage(image)
 
     return {

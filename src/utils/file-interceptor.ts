@@ -3,6 +3,8 @@ import { FileInterceptor } from '@nestjs/platform-express'
 
 export const ImageFileInterceptor = FileInterceptor('image', {
   fileFilter: (req: any, image: any, callback: any) => {
+    console.log('test', image)
+
     if (image.mimetype !== 'image/jpeg' && image.mimetype !== 'image/png') {
       return callback(
         new HttpException(
