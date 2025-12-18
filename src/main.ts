@@ -19,6 +19,7 @@ async function main() {
       // forbidNonWhitelisted: true,
     }),
   )
+  app.setGlobalPrefix('/api/')
   const configService = app.get(ConfigService)
   const appConfigService: AppConfigService = configService.get('app')
   requestSecurityInit(app)
