@@ -102,8 +102,8 @@ export class UserScoreInfoService {
         .leftJoin(
           'userScoreInfo.history',
           'history',
-          'history.createdAt BETWEEN :startDate AND :endDate',
-          { startDate, endDate },
+          'history.createdAt BETWEEN :startDate AND :endDate AND history.isDeleted = CAST(:isDeleted AS BOOLEAN)',
+          { startDate, endDate, isDeleted: false },
         )
         .select('userScoreInfo.id', 'id')
         .addSelect('COALESCE(SUM(history.distance), 0)', 'sumDistance')

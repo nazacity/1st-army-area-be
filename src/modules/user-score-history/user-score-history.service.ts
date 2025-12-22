@@ -1,8 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { UserScoreHistory } from './entities/user-score-history.entity'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Between, Repository } from 'typeorm'
+import { Between, Like, Repository } from 'typeorm'
 import {
+  UserScoreHistoryByUserIdQueryDto,
   UserScoreHistoryByUserScoreIdQueryDto,
   UserScoreHistoryCreate,
   UserScoreHistoryCreateDto,
@@ -11,6 +12,7 @@ import {
 } from './dto/user-score-history.dto'
 import { paginationUtil } from 'src/utils/pagination'
 import * as dayjs from 'dayjs'
+import { SummaryByPublicQueryDto } from '../summary/dto/summary.dto'
 
 @Injectable()
 export class UserScoreHistoryService {
@@ -20,13 +22,13 @@ export class UserScoreHistoryService {
     private readonly userScoreHistoryRepository: Repository<UserScoreHistory>,
   ) {}
 
-  async getUserScoreHistories(query: UserScoreHistoryQueryDto): Promise<{
+  async getUserScoreHistories(query: SummaryByPublicQueryDto): Promise<{
     userScoreHistorys: UserScoreHistory[]
     total: number
   }> {
     this.logger.log('get-user-score-histories')
     try {
-      const { take, skip } = paginationUtil(query)
+      const { take, skip } = paginationUtil({ page: '1', take: '-1' })
 
       const startDate = dayjs()
         .set('month', query.month)
@@ -55,6 +57,64 @@ export class UserScoreHistoryService {
           order: {
             createdAt: 'DESC',
           },
+          take,
+          skip,
+        })
+
+      return { userScoreHistorys, total }
+    } catch (error) {
+      this.logger.debug(error)
+      throw new Error(error)
+    }
+  }
+
+  async getUserScoreHistories2(query: UserScoreHistoryQueryDto): Promise<{
+    userScoreHistorys: UserScoreHistory[]
+    total: number
+  }> {
+    this.logger.log('get-user-score-histories')
+    try {
+      const { take, skip } = paginationUtil(query)
+
+      const startDate = dayjs(query.startDate).startOf('D').toDate()
+      const endDate = dayjs(query.endDate).endOf('D').toDate()
+
+      const [userScoreHistorys, total] =
+        await this.userScoreHistoryRepository.findAndCount({
+          where: [
+            {
+              isDeleted: false,
+              createdAt: Between(startDate, endDate),
+              scoreInfo: {
+                user: {
+                  ...(query.base && {
+                    base: query.base,
+                  }),
+                  ...(query.searchText && {
+                    firstName: Like(`%${query.searchText}%`),
+                  }),
+                },
+              },
+            },
+            {
+              isDeleted: false,
+              createdAt: Between(startDate, endDate),
+              scoreInfo: {
+                user: {
+                  ...(query.base && {
+                    base: query.base,
+                  }),
+                  ...(query.searchText && {
+                    lastName: Like(`%${query.searchText}%`),
+                  }),
+                },
+              },
+            },
+          ],
+          order: {
+            createdAt: 'DESC',
+          },
+          relations: ['scoreInfo.user'],
           take,
           skip,
         })
@@ -98,14 +158,35 @@ export class UserScoreHistoryService {
     }
   }
 
-  async getUserScoreHistoryById(userId: string): Promise<UserScoreHistory> {
-    this.logger.log('get-user-score-history-by-id')
+  async getUserScoreHistoryByUserId(
+    query: UserScoreHistoryByUserIdQueryDto,
+  ): Promise<{
+    userScoreHistorys: UserScoreHistory[]
+    total: number
+  }> {
+    this.logger.log('get-user-score-history-by-user-id')
     try {
-      const userScoreHistory = await this.userScoreHistoryRepository.findOne({
-        where: { id: userId, isDeleted: false },
-      })
+      const { take, skip } = paginationUtil(query)
 
-      return userScoreHistory
+      const [userScoreHistorys, total] =
+        await this.userScoreHistoryRepository.findAndCount({
+          where: {
+            scoreInfo: {
+              user: {
+                id: query.userId,
+              },
+            },
+            isDeleted: false,
+          },
+          order: {
+            createdAt: 'DESC',
+          },
+          take,
+          skip,
+          relations: ['scoreInfo.user'],
+        })
+
+      return { userScoreHistorys, total }
     } catch (error) {
       this.logger.debug(error)
       throw new Error(error)

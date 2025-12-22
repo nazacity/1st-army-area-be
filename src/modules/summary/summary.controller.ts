@@ -39,8 +39,6 @@ export class SummaryController {
       const { userScoreHistorys } =
         await this.userScoreHistoryService.getUserScoreHistories({
           ...query,
-          page: '1',
-          take: '-1',
         })
 
       return {

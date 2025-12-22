@@ -1,8 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
+import { Like, Repository } from 'typeorm'
 import { User } from './entities/user.entity'
-import { UserUpdateDto, UserQueryDto, UserCreate } from './dto/user.dto'
+import {
+  UserUpdateDto,
+  UserQueryDto,
+  UserCreate,
+  UserQueryByAdminDto,
+} from './dto/user.dto'
 import { paginationUtil } from 'src/utils/pagination'
 
 const relations = []
@@ -30,6 +35,49 @@ export class UserService {
             base: query.base,
           }),
         },
+        order: {
+          createdAt: 'DESC',
+        },
+        take,
+        skip,
+      })
+
+      return { users, total }
+    } catch (error) {
+      this.logger.debug(error)
+      throw new Error(error)
+    }
+  }
+
+  async getUsersByAdmin(query: UserQueryByAdminDto): Promise<{
+    users: User[]
+    total: number
+  }> {
+    this.logger.log('get-users-by-admin')
+    try {
+      const { take, skip } = paginationUtil(query)
+
+      const [users, total] = await this.userRepository.findAndCount({
+        where: [
+          {
+            isDeleted: false,
+            ...(query.base && {
+              base: query.base,
+            }),
+            ...(query.searchText && {
+              firstName: Like(`%${query.searchText}%`),
+            }),
+          },
+          {
+            isDeleted: false,
+            ...(query.base && {
+              base: query.base,
+            }),
+            ...(query.searchText && {
+              lastName: Like(`%${query.searchText}%`),
+            }),
+          },
+        ],
         order: {
           createdAt: 'DESC',
         },

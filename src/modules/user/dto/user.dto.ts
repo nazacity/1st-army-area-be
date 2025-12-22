@@ -108,3 +108,20 @@ export class UserQueryDto extends PaginationDto {
   @IsString()
   base?: string
 }
+
+export class UserQueryByAdminDto extends PaginationDto {
+  @ApiProperty({
+    required: false,
+    enum: UserBase,
+  })
+  @IsOptional()
+  @IsString()
+  base?: string
+
+  @ApiProperty({
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  searchText: string
+}

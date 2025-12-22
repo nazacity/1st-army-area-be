@@ -9,19 +9,28 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
   Request,
   UseGuards,
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
-import { RequestClinicUserModel } from 'src/model/request.model'
+import {
+  RequestAdminUserModel,
+  RequestClinicUserModel,
+} from 'src/model/request.model'
 import { ResponseModel } from 'src/model/response.model'
 import { UserJwtAuthGuard } from '../auth/guard/user-auth.guard'
 import { UserService } from './user.service'
 import { User } from './entities/user.entity'
-import { UserCreateDto, UserUpdateDto } from './dto/user.dto'
+import {
+  UserCreateDto,
+  UserQueryByAdminDto,
+  UserUpdateDto,
+} from './dto/user.dto'
 import { AuthTokenModel } from '../auth/model/auth-token.model'
 import { JwtService } from '@nestjs/jwt'
 import { UserScoreInfoService } from '../user-score-info/user-score-info.service'
+import { AdminJwtAuthGuard } from '../auth/guard/admin-auth.guard'
 
 @ApiTags('User')
 @Controller('user')
@@ -40,6 +49,29 @@ export class UserController {
   ): Promise<ResponseModel<User>> {
     try {
       return { data: req.user }
+    } catch (error) {
+      throw new HttpException(
+        {
+          message: error.message,
+        },
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+  }
+
+  @ApiBearerAuth('Admin Authorization')
+  @UseGuards(AdminJwtAuthGuard)
+  @Get('')
+  async getUsers(
+    // @Request() req: RequestAdminUserModel,
+    @Query() query: UserQueryByAdminDto,
+  ): Promise<ResponseModel<User[]>> {
+    try {
+      const { users, total } = await this.userService.getUsersByAdmin(query)
+      return {
+        meta: { total },
+        data: users,
+      }
     } catch (error) {
       throw new HttpException(
         {

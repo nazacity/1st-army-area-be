@@ -7,10 +7,7 @@ import {
 } from '@nestjs/common'
 import { UserScoreInfoService } from './user-score-info.service'
 import { ApiTags } from '@nestjs/swagger'
-import {
-  UserScoreInfoByPublicQueryDto,
-  UserScoreInfoByUserQueryDto,
-} from './dto/user-score-info.dto'
+import { UserScoreInfoByPublicQueryDto } from './dto/user-score-info.dto'
 import { ResponseModel } from 'src/model/response.model'
 import { UserScoreInfo } from './entities/user-score-info.entity'
 

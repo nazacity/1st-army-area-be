@@ -36,8 +36,8 @@ async function main() {
     }),
   )
   const config = new DocumentBuilder()
-    .setTitle('Check running example')
-    .setDescription('Check running API description')
+    .setTitle('1st Army Area Api')
+    .setDescription('1st Army Area Api')
     .setVersion('1.0')
     .addBearerAuth(
       {

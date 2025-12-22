@@ -1,8 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger'
 import {
+  IsDateString,
   IsNotEmpty,
   IsNumber,
-  IsNumberString,
   IsOptional,
   IsString,
 } from 'class-validator'
@@ -58,18 +58,11 @@ export class UserScoreHistoryUpdateDto {
 
 export class UserScoreHistoryQueryDto extends PaginationDto {
   @ApiProperty({
-    default: 11,
+    required: false,
   })
-  @IsNotEmpty()
-  @IsNumberString()
-  month: number
-
-  @ApiProperty({
-    default: 2025,
-  })
-  @IsNotEmpty()
-  @IsNumberString()
-  year: number
+  @IsOptional()
+  @IsString()
+  searchText: string
 
   @ApiProperty({
     required: false,
@@ -78,8 +71,22 @@ export class UserScoreHistoryQueryDto extends PaginationDto {
   @IsOptional()
   @IsString()
   base?: string
+
+  @ApiProperty({ default: new Date() })
+  @IsNotEmpty()
+  @IsDateString()
+  startDate: Date
+
+  @ApiProperty({ default: new Date() })
+  @IsNotEmpty()
+  @IsDateString()
+  endDate: Date
 }
 
 export class UserScoreHistoryByUserScoreIdQueryDto extends PaginationDto {
   userScoreId: string
+}
+
+export class UserScoreHistoryByUserIdQueryDto extends PaginationDto {
+  userId: string
 }
