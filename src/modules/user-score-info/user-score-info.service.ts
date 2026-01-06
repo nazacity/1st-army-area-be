@@ -168,7 +168,7 @@ export class UserScoreInfoService {
         },
         relations: {
           user: true,
-          // history: true,
+          history: true,
         },
         order: {
           createdAt: 'DESC',
