@@ -194,7 +194,11 @@ export class UserScoreInfoService {
           // filter history ให้เหลือเฉพาะของเดือนนั้น
           const filteredHistory = entity.history.filter((h) => {
             const created = new Date(h.createdAt)
-            return created >= startDate && created <= endDate
+            return (
+              created >= startDate &&
+              created <= endDate &&
+              h.isDeleted === false
+            )
           })
 
           return {
