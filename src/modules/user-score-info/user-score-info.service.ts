@@ -159,10 +159,10 @@ export class UserScoreInfoService {
             ...(query.base && { base: query.base }),
           },
           // history: {
-          //   status: In([
-          //     UserScoreHistoryStatus.approved,
-          //     UserScoreHistoryStatus.pending,
-          //   ]),
+          // status: In([
+          //   UserScoreHistoryStatus.approved,
+          //   UserScoreHistoryStatus.pending,
+          // ]),
           //   isDeleted: false,
           // },
         },
@@ -192,18 +192,22 @@ export class UserScoreInfoService {
           if (!entity) return null
 
           // filter history ให้เหลือเฉพาะของเดือนนั้น
-          // const filteredHistory = entity.history.filter((h) => {
-          //   const created = new Date(h.createdAt)
-          //   return (
-          //     created >= startDate &&
-          //     created <= endDate &&
-          //     h.isDeleted === false
-          //   )
-          // })
+          const filteredHistory = entity.history.filter((h) => {
+            const created = new Date(h.createdAt)
+            return (
+              created >= startDate &&
+              created <= endDate &&
+              h.isDeleted === false &&
+              [
+                UserScoreHistoryStatus.approved,
+                UserScoreHistoryStatus.pending,
+              ].includes(h.status)
+            )
+          })
 
           return {
             ...entity,
-            // history: filteredHistory, // ถ้าไม่มีในเดือนนี้ → []
+            history: filteredHistory, // ถ้าไม่มีในเดือนนี้ → []
             sumDistance: sumMap[id] ?? 0, // ถ้าไม่มี history เลย → 0
           }
         })
