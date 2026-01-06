@@ -158,17 +158,17 @@ export class UserScoreInfoService {
             isDeleted: false,
             ...(query.base && { base: query.base }),
           },
-          history: {
-            status: In([
-              UserScoreHistoryStatus.approved,
-              UserScoreHistoryStatus.pending,
-            ]),
-            isDeleted: false,
-          },
+          // history: {
+          //   status: In([
+          //     UserScoreHistoryStatus.approved,
+          //     UserScoreHistoryStatus.pending,
+          //   ]),
+          //   isDeleted: false,
+          // },
         },
         relations: {
           user: true,
-          history: true,
+          // history: true,
         },
         order: {
           createdAt: 'DESC',
