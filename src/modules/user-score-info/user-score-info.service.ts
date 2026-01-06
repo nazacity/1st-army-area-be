@@ -11,6 +11,7 @@ import {
 import { paginationUtil } from 'src/utils/pagination'
 import * as _ from 'lodash'
 import * as dayjs from 'dayjs'
+import { UserScoreHistoryStatus } from '../user-score-history/entities/user-score-history.entity'
 
 @Injectable()
 export class UserScoreInfoService {
@@ -102,8 +103,16 @@ export class UserScoreInfoService {
         .leftJoin(
           'userScoreInfo.history',
           'history',
-          'history.createdAt BETWEEN :startDate AND :endDate AND history.isDeleted = CAST(:isDeleted AS BOOLEAN)',
-          { startDate, endDate, isDeleted: false },
+          'history.createdAt BETWEEN :startDate AND :endDate AND history.isDeleted = CAST(:isDeleted AS BOOLEAN) AND history.status IN (:...status)',
+          {
+            startDate,
+            endDate,
+            isDeleted: false,
+            status: [
+              UserScoreHistoryStatus.approved,
+              UserScoreHistoryStatus.pending,
+            ],
+          },
         )
         .select('userScoreInfo.id', 'id')
         .addSelect('COALESCE(SUM(history.distance), 0)', 'sumDistance')
@@ -112,7 +121,10 @@ export class UserScoreInfoService {
         })
 
       if (query.base) {
-        baseQb.andWhere('u.base = :base', { base: query.base })
+        baseQb.andWhere(
+          'u.base = :base AND u.isDeleted = CAST(:isDeleted AS BOOLEAN)',
+          { base: query.base, isDeleted: false },
+        )
       }
 
       baseQb.groupBy('userScoreInfo.id')
@@ -142,7 +154,17 @@ export class UserScoreInfoService {
           id: In(ids),
           isDeleted: false,
           // จะใส่ filter base ซ้ำตรงนี้ก็ได้เพื่อความชัวร์
-          ...(query.base && { user: { base: query.base } }),
+          user: {
+            isDeleted: false,
+            ...(query.base && { base: query.base }),
+          },
+          history: {
+            status: In([
+              UserScoreHistoryStatus.approved,
+              UserScoreHistoryStatus.pending,
+            ]),
+            isDeleted: false,
+          },
         },
         relations: {
           user: true,

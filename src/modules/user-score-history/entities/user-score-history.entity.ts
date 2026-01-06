@@ -2,6 +2,12 @@ import { UserScoreInfo } from 'src/modules/user-score-info/entities/user-score-i
 import { GlobalEntity } from 'src/utils/global-entity'
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm'
 
+export enum UserScoreHistoryStatus {
+  'approved' = 'approved',
+  'pending' = 'pending',
+  'rejected' = 'rejected',
+}
+
 @Entity({
   name: `${process.env.ENV}_user_score_history`,
 })
@@ -22,4 +28,11 @@ export class UserScoreHistory extends GlobalEntity {
     createForeignKeyConstraints: false,
   })
   scoreInfo: UserScoreInfo
+
+  @Column({
+    default: UserScoreHistoryStatus.pending,
+    type: 'enum',
+    enum: UserScoreHistoryStatus,
+  })
+  status: UserScoreHistoryStatus
 }

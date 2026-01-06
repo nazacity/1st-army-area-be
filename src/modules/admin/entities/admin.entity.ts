@@ -2,13 +2,13 @@ import { GlobalEntity } from 'src/utils/global-entity'
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
 
 @Entity({
-  name: `${process.env.ENV}_admin`,
+  name: `${process.env.ENV}_admin1`,
 })
 export class Admin extends GlobalEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string
 
-  @Column()
+  @Column({ unique: true })
   username: string
 
   @Column()

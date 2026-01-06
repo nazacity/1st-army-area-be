@@ -7,6 +7,7 @@ import {
   HttpStatus,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
   Query,
   Request,
@@ -20,6 +21,7 @@ import {
   UserScoreHistoryByUserScoreIdQueryDto,
   UserScoreHistoryCreateDto,
   UserScoreHistoryQueryDto,
+  UserScoreHistoryUpdateDto,
 } from './dto/user-score-history.dto'
 import { ResponseModel } from 'src/model/response.model'
 import { UserScoreHistory } from './entities/user-score-history.entity'
@@ -87,6 +89,34 @@ export class UserScoreHistoryController {
     }
   }
 
+  @ApiBearerAuth('Admin Authorization')
+  @UseGuards(AdminJwtAuthGuard)
+  @Get('/:userId/user')
+  async getUserScoreHistoryByUserId2(
+    @Param('userId', new ParseUUIDPipe()) userId: string,
+    @Query() query: UserScoreHistoryByUserIdQueryDto,
+  ): Promise<ResponseModel<UserScoreHistory[]>> {
+    try {
+      const { userScoreHistorys, total } =
+        await this.userScoreHistoryService.getUserScoreHistoriesByUserId({
+          ...query,
+          userId,
+        })
+
+      return {
+        meta: { total },
+        data: userScoreHistorys,
+      }
+    } catch (error) {
+      throw new HttpException(
+        {
+          message: error.message,
+        },
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+  }
+
   @Post()
   async createUserScoreHistory(
     @Body() userScoreHistoryCreateDto: UserScoreHistoryCreateDto,
@@ -102,6 +132,32 @@ export class UserScoreHistoryController {
         })
 
       return { data: createUser }
+    } catch (error) {
+      throw new HttpException(
+        {
+          message: error.message,
+        },
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+  }
+
+  @ApiBearerAuth('Admin Authorization')
+  @UseGuards(AdminJwtAuthGuard)
+  @Patch('/:userScoreHistoryId')
+  async updateUser(
+    @Param('userScoreHistoryId', new ParseUUIDPipe())
+    userScoreHistoryId: string,
+    @Body() userScoreHistoryUpdate: UserScoreHistoryUpdateDto,
+  ): Promise<ResponseModel<UserScoreHistory>> {
+    try {
+      const updatedUserScoreHistory =
+        await this.userScoreHistoryService.updateUserScoreHistory({
+          id: userScoreHistoryId,
+          userScoreHistoryUpdate,
+        })
+
+      return { data: updatedUserScoreHistory }
     } catch (error) {
       throw new HttpException(
         {

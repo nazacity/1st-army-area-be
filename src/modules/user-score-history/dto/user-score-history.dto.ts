@@ -1,14 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger'
 import {
   IsDateString,
+  IsEnum,
   IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
 } from 'class-validator'
 import { UserScoreInfo } from 'src/modules/user-score-info/entities/user-score-info.entity'
-import { UserBase } from 'src/modules/user/entities/user.entity'
+import { User, UserBase } from 'src/modules/user/entities/user.entity'
 import { PaginationDto } from 'src/utils/pagination'
+import { UserScoreHistoryStatus } from '../entities/user-score-history.entity'
 
 export class UserScoreHistoryCreateDto {
   @ApiProperty()
@@ -40,20 +42,12 @@ export class UserScoreHistoryCreate {
 }
 
 export class UserScoreHistoryUpdateDto {
-  @ApiProperty()
+  @ApiProperty({
+    enum: UserScoreHistoryStatus,
+  })
   @IsNotEmpty()
-  @IsNumber()
-  time: number
-
-  @ApiProperty()
-  @IsNotEmpty()
-  @IsNumber()
-  distance: number
-
-  @ApiProperty()
-  @IsNotEmpty()
-  @IsString()
-  imageUrl: string
+  @IsEnum(UserScoreHistoryStatus)
+  status: UserScoreHistoryStatus
 }
 
 export class UserScoreHistoryQueryDto extends PaginationDto {
@@ -72,21 +66,35 @@ export class UserScoreHistoryQueryDto extends PaginationDto {
   @IsString()
   base?: string
 
-  @ApiProperty({ default: new Date() })
-  @IsNotEmpty()
+  @ApiProperty({ default: '', required: false })
+  @IsOptional()
   @IsDateString()
-  startDate: Date
+  startDate?: Date
 
-  @ApiProperty({ default: new Date() })
-  @IsNotEmpty()
+  @ApiProperty({ default: '', required: false })
+  @IsOptional()
   @IsDateString()
-  endDate: Date
+  endDate?: Date
+}
+
+export class UserScoreHistoryByUserIdQueryDto extends PaginationDto {
+  @ApiProperty({ default: '', required: false })
+  @IsOptional()
+  @IsDateString()
+  startDate?: Date
+
+  @ApiProperty({ default: '', required: false })
+  @IsOptional()
+  @IsDateString()
+  endDate?: Date
+
+  userId: string
 }
 
 export class UserScoreHistoryByUserScoreIdQueryDto extends PaginationDto {
   userScoreId: string
 }
 
-export class UserScoreHistoryByUserIdQueryDto extends PaginationDto {
-  userId: string
-}
+// export class UserScoreHistoryByUserIdQueryDto extends PaginationDto {
+//   userId: string
+// }
