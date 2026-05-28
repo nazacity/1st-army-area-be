@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Like, Repository } from 'typeorm'
 import { NotUnitUser } from './entities/not-unit-user.entity'
+import { NotUnitUserDocument } from 'src/modules/not-unit-user-document/entities/not-unit-user-document.entity'
 import {
   NotUnitUserCreateDto,
   NotUnitUserQueryDto,
@@ -15,17 +16,29 @@ export class NotUnitUserService {
   constructor(
     @InjectRepository(NotUnitUser)
     private readonly notUnitUserRepository: Repository<NotUnitUser>,
+    @InjectRepository(NotUnitUserDocument)
+    private readonly documentRepository: Repository<NotUnitUserDocument>,
   ) {}
 
   async createNotUnitUser(dto: NotUnitUserCreateDto): Promise<NotUnitUser> {
     this.logger.log('create-not-unit-user')
     try {
-      const entity = await this.notUnitUserRepository.create({
-        ...dto,
-        unitUser: dto.unitUserId ? { id: dto.unitUserId } : undefined,
-        build: dto.buildId ? { id: dto.buildId } : undefined,
+      const { documents, unitUserId, buildId, ...rest } = dto
+      const entity = this.notUnitUserRepository.create({
+        ...rest,
+        unitUser: unitUserId ? { id: unitUserId } : undefined,
+        build: buildId ? { id: buildId } : undefined,
       })
-      return await this.notUnitUserRepository.save(entity)
+      const saved = await this.notUnitUserRepository.save(entity)
+
+      if (documents?.length) {
+        const docEntities = documents.map((doc) =>
+          this.documentRepository.create({ ...doc, notUnitUser: { id: saved.id } }),
+        )
+        await this.documentRepository.save(docEntities)
+      }
+
+      return this.getNotUnitUserById(saved.id)
     } catch (error) {
       this.logger.debug(error)
       throw new Error(error)
@@ -60,7 +73,7 @@ export class NotUnitUserService {
             }),
           },
         ],
-        relations: ['unitUser', 'build'],
+        relations: ['unitUser', 'build', 'documents'],
         order: { createdAt: 'DESC' },
         take,
         skip,
@@ -78,7 +91,7 @@ export class NotUnitUserService {
     try {
       return await this.notUnitUserRepository.findOne({
         where: { id, isDeleted: false },
-        relations: ['unitUser', 'build'],
+        relations: ['unitUser', 'build', 'documents'],
       })
     } catch (error) {
       this.logger.debug(error)
@@ -95,12 +108,26 @@ export class NotUnitUserService {
   }): Promise<NotUnitUser> {
     this.logger.log('update-not-unit-user')
     try {
-      return await this.notUnitUserRepository.save({
+      const { documents, unitUserId, buildId, ...rest } = update
+
+      await this.notUnitUserRepository.save({
         id,
-        ...update,
-        unitUser: update.unitUserId ? { id: update.unitUserId } : undefined,
-        build: update.buildId ? { id: update.buildId } : undefined,
+        ...rest,
+        unitUser: unitUserId ? { id: unitUserId } : undefined,
+        build: buildId ? { id: buildId } : undefined,
       })
+
+      if (documents) {
+        await this.documentRepository.delete({ notUnitUser: { id } })
+        if (documents.length) {
+          const docEntities = documents.map((doc) =>
+            this.documentRepository.create({ ...doc, notUnitUser: { id } }),
+          )
+          await this.documentRepository.save(docEntities)
+        }
+      }
+
+      return this.getNotUnitUserById(id)
     } catch (error) {
       this.logger.debug(error)
       throw new Error(error)

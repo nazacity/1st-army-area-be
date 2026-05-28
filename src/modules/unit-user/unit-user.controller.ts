@@ -16,6 +16,7 @@ import { ResponseModel } from 'src/model/response.model'
 import { UnitUser } from './entities/unit-user.entity'
 import { UnitUserService } from './unit-user.service'
 import {
+  IDCardUnitUserQueryDto,
   UnitUserCreateDto,
   UnitUserQueryDto,
   UnitUserUpdateDto,
@@ -34,7 +35,25 @@ export class UnitUserController {
       const { data, total } = await this.unitUserService.getAllUnitUsers(query)
       return { meta: { total }, data }
     } catch (error) {
-      throw new HttpException({ message: error.message }, HttpStatus.BAD_REQUEST)
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+  }
+
+  @Get('id-card')
+  async getByIdCard(
+    @Query() query: IDCardUnitUserQueryDto,
+  ): Promise<ResponseModel<UnitUser>> {
+    try {
+      const data = await this.unitUserService.getUnitUserByIdCard(query)
+      return { data }
+    } catch (error) {
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      )
     }
   }
 
@@ -46,7 +65,10 @@ export class UnitUserController {
       const data = await this.unitUserService.getUnitUserById(id)
       return { data }
     } catch (error) {
-      throw new HttpException({ message: error.message }, HttpStatus.BAD_REQUEST)
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      )
     }
   }
 
@@ -58,7 +80,10 @@ export class UnitUserController {
       const data = await this.unitUserService.createUnitUser(dto)
       return { data }
     } catch (error) {
-      throw new HttpException({ message: error.message }, HttpStatus.BAD_REQUEST)
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      )
     }
   }
 
@@ -74,7 +99,10 @@ export class UnitUserController {
       })
       return { data }
     } catch (error) {
-      throw new HttpException({ message: error.message }, HttpStatus.BAD_REQUEST)
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      )
     }
   }
 
@@ -86,7 +114,10 @@ export class UnitUserController {
       await this.unitUserService.deleteUnitUser(id)
       return { data: 'succeeded' }
     } catch (error) {
-      throw new HttpException({ message: error.message }, HttpStatus.BAD_REQUEST)
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      )
     }
   }
 }

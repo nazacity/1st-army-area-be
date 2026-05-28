@@ -4,12 +4,17 @@ import {
   Entity,
   ManyToOne,
   OneToMany,
-  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm'
 import { UnitUser } from 'src/modules/unit-user/entities/unit-user.entity'
 import { UnitUserVehicleImage } from 'src/modules/unit-user-vehicle-image/entities/unit-user-vehicle-image.entity'
 import { UnitUserVehicleSticker } from 'src/modules/unit-user-vehicle-sticker/entities/unit-user-vehicle-sticker.entity'
+import { UnitUserVehicleDocument } from 'src/modules/unit-user-vehicle-document/entities/unit-user-vehicle-document.entity'
+
+export enum UnitUserVehicleStatus {
+  'active' = 'active',
+  'disactive' = 'disactive',
+}
 
 @Entity({
   name: `${process.env.ENV}_unit_user_vehicle`,
@@ -39,10 +44,7 @@ export class UnitUserVehicle extends GlobalEntity {
   @Column({ type: 'text', default: '' })
   ownerFullName: string
 
-  @OneToMany(
-    () => UnitUserVehicleImage,
-    (image) => image.vehicle,
-  )
+  @OneToMany(() => UnitUserVehicleImage, (image) => image.vehicle)
   images: UnitUserVehicleImage[]
 
   @ManyToOne(() => UnitUser, (unitUser) => unitUser.vehicles, {
@@ -50,8 +52,16 @@ export class UnitUserVehicle extends GlobalEntity {
   })
   relationUnitUser: UnitUser
 
-  @OneToOne(() => UnitUserVehicleSticker, (sticker) => sticker.vehicle, {
-    nullable: true,
+  @OneToMany(() => UnitUserVehicleSticker, (sticker) => sticker.vehicle)
+  stickers: UnitUserVehicleSticker[]
+
+  @OneToMany(() => UnitUserVehicleDocument, (doc) => doc.vehicle)
+  documents: UnitUserVehicleDocument[]
+
+  @Column({
+    type: 'enum',
+    enum: UnitUserVehicleStatus,
+    default: UnitUserVehicleStatus.active,
   })
-  sticker: UnitUserVehicleSticker
+  status: UnitUserVehicleStatus
 }

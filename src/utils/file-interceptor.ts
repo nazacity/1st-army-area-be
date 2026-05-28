@@ -1,10 +1,17 @@
 import { BadRequestException, HttpException, HttpStatus } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 
+export function fixFileName(name: string): string {
+  if (!name) return name
+  try {
+    return Buffer.from(name, 'latin1').toString('utf8')
+  } catch {
+    return name
+  }
+}
+
 export const ImageFileInterceptor = FileInterceptor('image', {
   fileFilter: (req: any, image: any, callback: any) => {
-    console.log('test', image)
-
     if (image.mimetype !== 'image/jpeg' && image.mimetype !== 'image/png') {
       return callback(
         new HttpException(

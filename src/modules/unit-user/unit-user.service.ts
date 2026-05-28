@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { Like, Repository } from 'typeorm'
 import { UnitUser } from './entities/unit-user.entity'
 import {
+  IDCardUnitUserQueryDto,
   UnitUserCreateDto,
   UnitUserQueryDto,
   UnitUserUpdateDto,
@@ -39,27 +40,25 @@ export class UnitUserService {
     try {
       const { take, skip } = paginationUtil(query)
 
+      const baseWhere = {
+        isDeleted: false,
+        ...(query.status && { status: query.status }),
+        ...(query.rank && { rank: query.rank }),
+        ...(query.buildId && { build: { id: query.buildId } }),
+        ...(query.unitId && { unit: { id: query.unitId } }),
+      }
+
+      const searchFields = query.searchText
+        ? [
+            { ...baseWhere, firstName: Like(`%${query.searchText}%`) },
+            { ...baseWhere, lastName: Like(`%${query.searchText}%`) },
+            { ...baseWhere, idCardNo: Like(`%${query.searchText}%`) },
+            { ...baseWhere, soliderIdCardNo: Like(`%${query.searchText}%`) },
+          ]
+        : [baseWhere]
+
       const [data, total] = await this.unitUserRepository.findAndCount({
-        where: [
-          {
-            isDeleted: false,
-            ...(query.status && { status: query.status }),
-            ...(query.buildId && { build: { id: query.buildId } }),
-            ...(query.unitId && { unit: { id: query.unitId } }),
-            ...(query.searchText && {
-              firstName: Like(`%${query.searchText}%`),
-            }),
-          },
-          {
-            isDeleted: false,
-            ...(query.status && { status: query.status }),
-            ...(query.buildId && { build: { id: query.buildId } }),
-            ...(query.unitId && { unit: { id: query.unitId } }),
-            ...(query.searchText && {
-              lastName: Like(`%${query.searchText}%`),
-            }),
-          },
-        ],
+        where: searchFields,
         relations: ['build', 'unit', 'relationNotUnitUser'],
         order: { createdAt: 'DESC' },
         take,
@@ -78,6 +77,23 @@ export class UnitUserService {
     try {
       return await this.unitUserRepository.findOne({
         where: { id, isDeleted: false },
+        relations: ['build', 'unit', 'relationNotUnitUser'],
+      })
+    } catch (error) {
+      this.logger.debug(error)
+      throw new Error(error)
+    }
+  }
+
+  async getUnitUserByIdCard(query: IDCardUnitUserQueryDto): Promise<UnitUser> {
+    this.logger.log('get-unit-user-by-id-card')
+    try {
+      return await this.unitUserRepository.findOne({
+        where: {
+          idCardNo: query.idCardNo,
+          soliderIdCardNo: query.soliderIdCardNo,
+          isDeleted: false,
+        },
         relations: ['build', 'unit', 'relationNotUnitUser'],
       })
     } catch (error) {

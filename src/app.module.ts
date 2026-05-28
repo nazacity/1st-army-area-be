@@ -26,6 +26,10 @@ import { UnitModule } from './modules/unit/unit.module';
 import { UnitUserVehicleModule } from './modules/unit-user-vehicle/unit-user-vehicle.module';
 import { UnitUserVehicleImageModule } from './modules/unit-user-vehicle-image/unit-user-vehicle-image.module';
 import { UnitUserVehicleStickerModule } from './modules/unit-user-vehicle-sticker/unit-user-vehicle-sticker.module';
+import { UnitUserDocumentModule } from './modules/unit-user-document/unit-user-document.module';
+import { NotUnitUserDocumentModule } from './modules/not-unit-user-document/not-unit-user-document.module';
+import { UnitUserVehicleDocumentModule } from './modules/unit-user-vehicle-document/unit-user-vehicle-document.module';
+import { CavaryR2Module } from './modules/cavary-r2/cavary-r2.module';
 
 // Scheduler
 
@@ -87,6 +91,10 @@ import { UnitUserVehicleStickerModule } from './modules/unit-user-vehicle-sticke
     UnitUserVehicleModule,
     UnitUserVehicleImageModule,
     UnitUserVehicleStickerModule,
+    UnitUserDocumentModule,
+    NotUnitUserDocumentModule,
+    UnitUserVehicleDocumentModule,
+    CavaryR2Module,
   ],
   providers: [
     {

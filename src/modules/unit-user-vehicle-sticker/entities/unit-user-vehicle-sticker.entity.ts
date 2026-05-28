@@ -1,5 +1,5 @@
 import { GlobalEntity } from 'src/utils/global-entity'
-import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm'
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm'
 import { UnitUserVehicle } from 'src/modules/unit-user-vehicle/entities/unit-user-vehicle.entity'
 
 export enum VehicleStickerType {
@@ -39,6 +39,8 @@ export class UnitUserVehicleSticker extends GlobalEntity {
   @Column({ type: 'date', nullable: true })
   expired: Date
 
-  @OneToOne(() => UnitUserVehicle, (vehicle) => vehicle.sticker)
+  @ManyToOne(() => UnitUserVehicle, (vehicle) => vehicle.stickers, {
+    nullable: true,
+  })
   vehicle: UnitUserVehicle
 }

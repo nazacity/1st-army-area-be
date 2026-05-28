@@ -7,7 +7,11 @@ import {
   IsString,
 } from 'class-validator'
 import { PaginationDto } from 'src/utils/pagination'
-import { UnitUserGender, UnitUserStatus } from '../entities/unit-user.entity'
+import {
+  UnitUserGender,
+  UnitUserRank,
+  UnitUserStatus,
+} from '../entities/unit-user.entity'
 
 export class UnitUserCreateDto {
   @ApiProperty()
@@ -149,6 +153,11 @@ export class UnitUserQueryDto extends PaginationDto {
   @IsEnum(UnitUserStatus)
   status?: UnitUserStatus
 
+  @ApiProperty({ required: false, enum: UnitUserRank })
+  @IsOptional()
+  @IsEnum(UnitUserRank)
+  rank?: UnitUserRank
+
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
@@ -163,4 +172,26 @@ export class UnitUserQueryDto extends PaginationDto {
   @IsOptional()
   @IsString()
   unitId?: string
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  idCardNo?: string
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  soliderIdCardNo?: string
+}
+
+export class IDCardUnitUserQueryDto {
+  @ApiProperty({ required: false })
+  @IsNotEmpty()
+  @IsString()
+  idCardNo: string
+
+  @ApiProperty({ required: false })
+  @IsNotEmpty()
+  @IsString()
+  soliderIdCardNo: string
 }

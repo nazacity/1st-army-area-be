@@ -28,4 +28,11 @@ export class S3Utils {
   static removeWhiteSpace(fileName) {
     return fileName.replace(/\s+/g, '_')
   }
+
+  static sanitizeFileName(fileName: string): string {
+    const ext = fileName.includes('.') ? '.' + fileName.split('.').pop() : ''
+    const base = fileName.includes('.') ? fileName.split('.').slice(0, -1).join('.') : fileName
+    const sanitized = base.replace(/[^a-zA-Z0-9_-]/g, '')
+    return ext ? sanitized + ext : sanitized
+  }
 }

@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator'
+import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID } from 'class-validator'
 import { PaginationDto } from 'src/utils/pagination'
-import { BuildingStatus } from '../entities/build.entity'
+import { BuildingStatus, BuildingType } from '../entities/build.entity'
 
 export class BuildCreateDto {
   @ApiProperty()
@@ -23,6 +23,16 @@ export class BuildCreateDto {
   @IsOptional()
   @IsEnum(BuildingStatus)
   status: BuildingStatus
+
+  @ApiProperty({ default: BuildingType['เรือนแถว'] })
+  @IsOptional()
+  @IsEnum(BuildingType)
+  type: BuildingType
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsUUID()
+  unitId: string
 }
 
 export class BuildUpdateDto {
@@ -45,6 +55,16 @@ export class BuildUpdateDto {
   @IsOptional()
   @IsEnum(BuildingStatus)
   status: BuildingStatus
+
+  @ApiProperty()
+  @IsOptional()
+  @IsEnum(BuildingType)
+  type: BuildingType
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsUUID()
+  unitId: string
 }
 
 export class BuildQueryDto extends PaginationDto {
@@ -53,8 +73,18 @@ export class BuildQueryDto extends PaginationDto {
   @IsEnum(BuildingStatus)
   status?: BuildingStatus
 
+  @ApiProperty({ required: false, enum: BuildingType })
+  @IsOptional()
+  @IsEnum(BuildingType)
+  type?: BuildingType
+
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   searchText?: string
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsUUID()
+  unitId?: string
 }

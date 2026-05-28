@@ -5,12 +5,36 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  ValidateNested,
 } from 'class-validator'
 import { PaginationDto } from 'src/utils/pagination'
+import { Type } from 'class-transformer'
 import {
   NotUnitUserGender,
   NotUnitUserStatus,
 } from '../entities/not-unit-user.entity'
+
+class NotUnitUserDocumentDto {
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  docName: string
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  docUrl: string
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  docType: string
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  docSize: string
+}
 
 export class NotUnitUserCreateDto {
   @ApiProperty()
@@ -82,6 +106,12 @@ export class NotUnitUserCreateDto {
   @IsOptional()
   @IsString()
   buildId: string
+
+  @ApiProperty({ type: [NotUnitUserDocumentDto], required: false })
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => NotUnitUserDocumentDto)
+  documents?: NotUnitUserDocumentDto[]
 }
 
 export class NotUnitUserUpdateDto {
@@ -154,6 +184,12 @@ export class NotUnitUserUpdateDto {
   @IsOptional()
   @IsString()
   buildId: string
+
+  @ApiProperty({ type: [NotUnitUserDocumentDto], required: false })
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => NotUnitUserDocumentDto)
+  documents?: NotUnitUserDocumentDto[]
 }
 
 export class NotUnitUserQueryDto extends PaginationDto {

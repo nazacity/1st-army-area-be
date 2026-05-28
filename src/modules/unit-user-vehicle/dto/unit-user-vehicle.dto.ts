@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IsOptional, IsString } from 'class-validator'
+import { IsEnum, IsOptional, IsString } from 'class-validator'
 import { PaginationDto } from 'src/utils/pagination'
+import { UnitUserVehicleStatus } from '../entities/unit-user-vehicle.entity'
 
 export class VehicleCreateDto {
   @ApiProperty()
@@ -47,6 +48,11 @@ export class VehicleCreateDto {
   @IsOptional()
   @IsString()
   stickerId: string
+
+  @ApiProperty({ default: UnitUserVehicleStatus.active })
+  @IsOptional()
+  @IsEnum(UnitUserVehicleStatus)
+  status: UnitUserVehicleStatus
 }
 
 export class VehicleUpdateDto {
@@ -94,9 +100,19 @@ export class VehicleUpdateDto {
   @IsOptional()
   @IsString()
   stickerId: string
+
+  @ApiProperty()
+  @IsOptional()
+  @IsEnum(UnitUserVehicleStatus)
+  status: UnitUserVehicleStatus
 }
 
 export class VehicleQueryDto extends PaginationDto {
+  @ApiProperty({ required: false, enum: UnitUserVehicleStatus })
+  @IsOptional()
+  @IsEnum(UnitUserVehicleStatus)
+  status?: UnitUserVehicleStatus
+
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()

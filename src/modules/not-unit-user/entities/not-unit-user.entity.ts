@@ -3,10 +3,12 @@ import {
   Column,
   Entity,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm'
 import { UnitUser } from 'src/modules/unit-user/entities/unit-user.entity'
 import { Build } from 'src/modules/build/entities/build.entity'
+import { NotUnitUserDocument } from 'src/modules/not-unit-user-document/entities/not-unit-user-document.entity'
 
 export enum NotUnitUserGender {
   'male' = 'male',
@@ -78,4 +80,7 @@ export class NotUnitUser extends GlobalEntity {
     nullable: true,
   })
   build: Build
+
+  @OneToMany(() => NotUnitUserDocument, (doc) => doc.notUnitUser)
+  documents: NotUnitUserDocument[]
 }

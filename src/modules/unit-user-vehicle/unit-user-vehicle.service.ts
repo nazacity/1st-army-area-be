@@ -19,7 +19,7 @@ export class UnitUserVehicleService {
       const entity = this.repo.create({
         ...dto,
         relationUnitUser: dto.unitUserId ? { id: dto.unitUserId } : undefined,
-        sticker: dto.stickerId ? { id: dto.stickerId } : undefined,
+        stickers: dto.stickerId ? [{ id: dto.stickerId }] : undefined,
       })
       return await this.repo.save(entity)
     } catch (error) {
@@ -38,6 +38,7 @@ export class UnitUserVehicleService {
         where: [
           {
             isDeleted: false,
+            ...(query.status && { status: query.status }),
             ...(query.unitUserId && {
               relationUnitUser: { id: query.unitUserId },
             }),
@@ -47,6 +48,7 @@ export class UnitUserVehicleService {
           },
           {
             isDeleted: false,
+            ...(query.status && { status: query.status }),
             ...(query.unitUserId && {
               relationUnitUser: { id: query.unitUserId },
             }),
@@ -55,7 +57,7 @@ export class UnitUserVehicleService {
             }),
           },
         ],
-        relations: ['images', 'relationUnitUser', 'sticker'],
+        relations: ['images', 'relationUnitUser', 'stickers'],
         order: { createdAt: 'DESC' },
         take,
         skip,
@@ -72,7 +74,7 @@ export class UnitUserVehicleService {
     try {
       return await this.repo.findOne({
         where: { id, isDeleted: false },
-        relations: ['images', 'relationUnitUser', 'sticker'],
+        relations: ['images', 'relationUnitUser', 'stickers'],
       })
     } catch (error) {
       this.logger.debug(error)
@@ -95,7 +97,7 @@ export class UnitUserVehicleService {
         relationUnitUser: update.unitUserId
           ? { id: update.unitUserId }
           : undefined,
-        sticker: update.stickerId ? { id: update.stickerId } : undefined,
+        stickers: update.stickerId ? [{ id: update.stickerId }] : undefined,
       })
     } catch (error) {
       this.logger.debug(error)

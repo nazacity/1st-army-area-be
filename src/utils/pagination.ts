@@ -26,9 +26,9 @@ export const paginationUtil = (
   query: PaginationDto,
 ): { take: number; skip: number } => {
   const { take, page } = query
-  const skip = (parseInt(page) - 1) * parseInt(take)
+  const skip = (Number(page) - 1) * Number(take)
 
-  if (take === '-1') {
+  if (Number(take) === -1) {
     return {
       take: null,
       skip: skip,
@@ -36,7 +36,7 @@ export const paginationUtil = (
   }
 
   return {
-    take: parseInt(take),
+    take: Number(take),
     skip,
   }
 }

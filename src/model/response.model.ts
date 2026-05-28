@@ -10,6 +10,8 @@ export class ResponseModel<T> {
 export class ResourceUrl {
   fileName: string
   resourceUrl: string
+  fileType?: string
+  fileSize?: number
 }
 
 export class ResourceUploadUrl {
