@@ -4,6 +4,8 @@ import {
   Get,
   HttpException,
   HttpStatus,
+  Param,
+  Patch,
   Post,
   Request,
   UseGuards,
@@ -13,7 +15,7 @@ import { RequestAdminUserModel } from 'src/model/request.model'
 import { ResponseModel } from 'src/model/response.model'
 import { AdminJwtAuthGuard } from '../auth/guard/admin-auth.guard'
 import { AdminService } from './admin.service'
-import { AdminCreateDto } from './dto/admin.dto'
+import { AdminCreateDto, AdminUpdateDto } from './dto/admin.dto'
 import { Admin } from './entities/admin.entity'
 
 @ApiTags('Admin Services')
@@ -47,6 +49,30 @@ export class AdminController {
       const createdAdmin = await this.adminService.createAdmin(adminCreateDto)
 
       return { data: createdAdmin }
+    } catch (error) {
+      throw new HttpException(
+        {
+          message: error.message,
+        },
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+  }
+
+  @ApiBearerAuth('Admin Authorization')
+  @UseGuards(AdminJwtAuthGuard)
+  @Patch('/:id')
+  async updateAdmin(
+    @Param('id') id: string,
+    @Body() adminUpdateDto: AdminUpdateDto,
+  ): Promise<ResponseModel<Admin>> {
+    try {
+      const updatedAdmin = await this.adminService.updateAdmin({
+        adminId: id,
+        adminUpdateDto,
+      })
+
+      return { data: updatedAdmin }
     } catch (error) {
       throw new HttpException(
         {

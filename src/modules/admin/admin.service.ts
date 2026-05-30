@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Crypto } from 'src/utils/crypto'
 import { Repository } from 'typeorm'
-import { AdminCreateDto } from './dto/admin.dto'
+import { AdminCreateDto, AdminUpdateDto } from './dto/admin.dto'
 import { Admin } from './entities/admin.entity'
 
 @Injectable()
@@ -94,17 +94,22 @@ export class AdminService {
     adminUpdateDto,
   }: {
     adminId: string
-    adminUpdateDto: Admin
+    adminUpdateDto: AdminUpdateDto
   }): Promise<Admin> {
     this.logger.log('update-admin-by-id')
     try {
       const admin = await this.adminRepository.findOne({
         where: {
           id: adminId,
+          isDeleted: false,
         },
       })
 
-      if (admin) throw new Error('Admin is not found')
+      if (!admin) throw new Error('Admin is not found')
+
+      if (adminUpdateDto.password) {
+        adminUpdateDto.password = await Crypto.hash(adminUpdateDto.password)
+      }
 
       const updatedAdmin = {
         ...admin,
