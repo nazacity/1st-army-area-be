@@ -78,6 +78,11 @@ export class UnitUserCreateDto {
   @IsOptional()
   @IsString()
   profileImage: string
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  position: string
 }
 
 export class UnitUserUpdateDto {
@@ -145,6 +150,11 @@ export class UnitUserUpdateDto {
   @IsOptional()
   @IsString()
   profileImage: string
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  position: string
 }
 
 export class UnitUserQueryDto extends PaginationDto {

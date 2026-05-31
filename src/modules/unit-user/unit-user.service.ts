@@ -23,7 +23,7 @@ export class UnitUserService {
     try {
       const entity = this.unitUserRepository.create({
         ...dto,
-        build: dto.buildId ? { id: dto.buildId } : undefined,
+        building: dto.buildId ? { id: dto.buildId } : undefined,
         unit: dto.unitId ? { id: dto.unitId } : undefined,
       })
       return await this.unitUserRepository.save(entity)
@@ -44,7 +44,7 @@ export class UnitUserService {
         isDeleted: false,
         ...(query.status && { status: query.status }),
         ...(query.rank && { rank: query.rank }),
-        ...(query.buildId && { build: { id: query.buildId } }),
+        ...(query.buildId && { building: { id: query.buildId } }),
         ...(query.unitId && { unit: { id: query.unitId } }),
       }
 
@@ -59,7 +59,7 @@ export class UnitUserService {
 
       const [data, total] = await this.unitUserRepository.findAndCount({
         where: searchFields,
-        relations: ['build', 'unit', 'relationNotUnitUser'],
+        relations: ['building.buildingNo', 'unit', 'relationNotUnitUser'],
         order: { createdAt: 'DESC' },
         take,
         skip,
@@ -77,7 +77,18 @@ export class UnitUserService {
     try {
       return await this.unitUserRepository.findOne({
         where: { id, isDeleted: false },
-        relations: ['build', 'unit', 'relationNotUnitUser'],
+        relations: [
+          'building',
+          'building.buildingNo',
+          'unit',
+          'relationNotUnitUser',
+          'relationNotUnitUser.documents',
+          'vehicles',
+          'vehicles.images',
+          'vehicles.stickers',
+          'vehicles.documents',
+          'documents',
+        ],
       })
     } catch (error) {
       this.logger.debug(error)
@@ -94,7 +105,7 @@ export class UnitUserService {
           soliderIdCardNo: query.soliderIdCardNo,
           isDeleted: false,
         },
-        relations: ['build', 'unit', 'relationNotUnitUser'],
+        relations: ['building', 'unit', 'relationNotUnitUser'],
       })
     } catch (error) {
       this.logger.debug(error)
@@ -114,7 +125,7 @@ export class UnitUserService {
       return await this.unitUserRepository.save({
         id,
         ...update,
-        build: update.buildId ? { id: update.buildId } : undefined,
+        building: update.buildId ? { id: update.buildId } : undefined,
         unit: update.unitId ? { id: update.unitId } : undefined,
       })
     } catch (error) {

@@ -27,7 +27,7 @@ export class NotUnitUserService {
       const entity = this.notUnitUserRepository.create({
         ...rest,
         unitUser: unitUserId ? { id: unitUserId } : undefined,
-        build: buildId ? { id: buildId } : undefined,
+        building: buildId ? { id: buildId } : undefined,
       })
       const saved = await this.notUnitUserRepository.save(entity)
 
@@ -58,7 +58,7 @@ export class NotUnitUserService {
             isDeleted: false,
             ...(query.status && { status: query.status }),
             ...(query.unitUserId && { unitUser: { id: query.unitUserId } }),
-            ...(query.buildId && { build: { id: query.buildId } }),
+            ...(query.buildId && { building: { id: query.buildId } }),
             ...(query.searchText && {
               firstName: Like(`%${query.searchText}%`),
             }),
@@ -67,13 +67,13 @@ export class NotUnitUserService {
             isDeleted: false,
             ...(query.status && { status: query.status }),
             ...(query.unitUserId && { unitUser: { id: query.unitUserId } }),
-            ...(query.buildId && { build: { id: query.buildId } }),
+            ...(query.buildId && { building: { id: query.buildId } }),
             ...(query.searchText && {
               lastName: Like(`%${query.searchText}%`),
             }),
           },
         ],
-        relations: ['unitUser', 'build', 'documents'],
+        relations: ['unitUser', 'building', 'documents'],
         order: { createdAt: 'DESC' },
         take,
         skip,
@@ -91,7 +91,7 @@ export class NotUnitUserService {
     try {
       return await this.notUnitUserRepository.findOne({
         where: { id, isDeleted: false },
-        relations: ['unitUser', 'build', 'documents'],
+        relations: ['unitUser', 'building', 'documents'],
       })
     } catch (error) {
       this.logger.debug(error)
@@ -114,7 +114,7 @@ export class NotUnitUserService {
         id,
         ...rest,
         unitUser: unitUserId ? { id: unitUserId } : undefined,
-        build: buildId ? { id: buildId } : undefined,
+        building: buildId ? { id: buildId } : undefined,
       })
 
       if (documents) {

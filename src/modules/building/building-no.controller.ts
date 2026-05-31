@@ -13,21 +13,21 @@ import {
 } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { ResponseModel } from 'src/model/response.model'
-import { Build } from './entities/build.entity'
-import { BuildService } from './build.service'
-import { BuildCreateDto, BuildQueryDto, BuildUpdateDto } from './dto/build.dto'
+import { BuildingNo } from './entities/building-no.entity'
+import { BuildingNoService } from './building-no.service'
+import { BuildingNoCreateDto, BuildingNoQueryDto, BuildingNoUpdateDto } from './dto/building-no.dto'
 
-@ApiTags('Build')
-@Controller('build')
-export class BuildController {
-  constructor(private readonly buildService: BuildService) {}
+@ApiTags('Building No')
+@Controller('building-no')
+export class BuildingNoController {
+  constructor(private readonly buildingNoService: BuildingNoService) {}
 
   @Get()
   async getAll(
-    @Query() query: BuildQueryDto,
-  ): Promise<ResponseModel<Build[]>> {
+    @Query() query: BuildingNoQueryDto,
+  ): Promise<ResponseModel<BuildingNo[]>> {
     try {
-      const { data, total } = await this.buildService.getAllBuilds(query)
+      const { data, total } = await this.buildingNoService.getAllBuildingNos(query)
       return { meta: { total }, data }
     } catch (error) {
       throw new HttpException({ message: error.message }, HttpStatus.BAD_REQUEST)
@@ -37,9 +37,9 @@ export class BuildController {
   @Get('/:id')
   async getById(
     @Param('id', new ParseUUIDPipe()) id: string,
-  ): Promise<ResponseModel<Build>> {
+  ): Promise<ResponseModel<BuildingNo>> {
     try {
-      const data = await this.buildService.getBuildById(id)
+      const data = await this.buildingNoService.getBuildingNoById(id)
       return { data }
     } catch (error) {
       throw new HttpException({ message: error.message }, HttpStatus.BAD_REQUEST)
@@ -48,10 +48,10 @@ export class BuildController {
 
   @Post()
   async create(
-    @Body() dto: BuildCreateDto,
-  ): Promise<ResponseModel<Build>> {
+    @Body() dto: BuildingNoCreateDto,
+  ): Promise<ResponseModel<BuildingNo>> {
     try {
-      const data = await this.buildService.createBuild(dto)
+      const data = await this.buildingNoService.createBuildingNo(dto)
       return { data }
     } catch (error) {
       throw new HttpException({ message: error.message }, HttpStatus.BAD_REQUEST)
@@ -61,10 +61,10 @@ export class BuildController {
   @Patch('/:id')
   async update(
     @Param('id', new ParseUUIDPipe()) id: string,
-    @Body() dto: BuildUpdateDto,
-  ): Promise<ResponseModel<Build>> {
+    @Body() dto: BuildingNoUpdateDto,
+  ): Promise<ResponseModel<BuildingNo>> {
     try {
-      const data = await this.buildService.updateBuild({ id, update: dto })
+      const data = await this.buildingNoService.updateBuildingNo({ id, update: dto })
       return { data }
     } catch (error) {
       throw new HttpException({ message: error.message }, HttpStatus.BAD_REQUEST)
@@ -76,7 +76,7 @@ export class BuildController {
     @Param('id', new ParseUUIDPipe()) id: string,
   ): Promise<ResponseModel<string>> {
     try {
-      await this.buildService.deleteBuild(id)
+      await this.buildingNoService.deleteBuildingNo(id)
       return { data: 'succeeded' }
     } catch (error) {
       throw new HttpException({ message: error.message }, HttpStatus.BAD_REQUEST)

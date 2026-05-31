@@ -6,10 +6,12 @@ import {
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
+  Unique,
 } from 'typeorm'
 import { NotUnitUser } from 'src/modules/not-unit-user/entities/not-unit-user.entity'
 import { UnitUser } from 'src/modules/unit-user/entities/unit-user.entity'
 import { Unit } from 'src/modules/unit/entities/unit.entity'
+import { BuildingNo } from './building-no.entity'
 
 export enum BuildingStatus {
   'enabled' = 'enabled',
@@ -24,16 +26,18 @@ export enum BuildingType {
 }
 
 @Entity({
-  name: `${process.env.ENV}_build`,
+  name: `${process.env.ENV}_building`,
 })
-export class Build extends GlobalEntity {
+@Unique('UQ_building_floor_no', ['buildingNo', 'floor', 'no'])
+export class Building extends GlobalEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string
 
-  @Column({ type: 'text', default: '' })
-  buildNo: string
-
-  @Column({ type: 'enum', enum: BuildingType, default: BuildingType['เรือนแถว'] })
+  @Column({
+    type: 'enum',
+    enum: BuildingType,
+    default: BuildingType['เรือนแถว'],
+  })
   type: BuildingType
 
   @Column({ type: 'int', default: 0 })
@@ -49,10 +53,15 @@ export class Build extends GlobalEntity {
   })
   status: BuildingStatus
 
-  @OneToMany(() => NotUnitUser, (notUnitUser) => notUnitUser.build)
+  @ManyToOne(() => BuildingNo, (buildingNo) => buildingNo.buildings, {
+    nullable: true,
+  })
+  buildingNo: BuildingNo
+
+  @OneToMany(() => NotUnitUser, (notUnitUser) => notUnitUser.building)
   relationNotUnitUser: NotUnitUser[]
 
-  @OneToOne(() => UnitUser, (unitUser) => unitUser.build)
+  @OneToOne(() => UnitUser, (unitUser) => unitUser.building)
   unitUser: UnitUser
 
   @ManyToOne(() => Unit, (unit) => unit.unitUsers, { nullable: true })

@@ -19,7 +19,7 @@ import { R2Module } from './modules/r2/r2.module'
 import { UserScoreInfoModule } from './modules/user-score-info/user-score-info.module';
 import { UserScoreHistoryModule } from './modules/user-score-history/user-score-history.module';
 import { SummaryModule } from './modules/summary/summary.module';
-import { BuildModule } from './modules/build/build.module';
+import { BuildingModule } from './modules/building/building.module';
 import { UnitUserModule } from './modules/unit-user/unit-user.module';
 import { NotUnitUserModule } from './modules/not-unit-user/not-unit-user.module';
 import { UnitModule } from './modules/unit/unit.module';
@@ -84,7 +84,7 @@ import { CavaryR2Module } from './modules/cavary-r2/cavary-r2.module';
     UserScoreInfoModule,
     UserScoreHistoryModule,
     SummaryModule,
-    BuildModule,
+    BuildingModule,
     UnitUserModule,
     NotUnitUserModule,
     UnitModule,

@@ -8,7 +8,7 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm'
-import { Build } from 'src/modules/build/entities/build.entity'
+import { Building } from 'src/modules/building/entities/building.entity'
 import { NotUnitUser } from 'src/modules/not-unit-user/entities/not-unit-user.entity'
 import { Unit } from 'src/modules/unit/entities/unit.entity'
 import { UnitUserVehicle } from 'src/modules/unit-user-vehicle/entities/unit-user-vehicle.entity'
@@ -84,9 +84,9 @@ export class UnitUser extends GlobalEntity {
   })
   status: UnitUserStatus
 
-  @OneToOne(() => Build, (build) => build.unitUser, { nullable: true })
+  @OneToOne(() => Building, (building) => building.unitUser, { nullable: true })
   @JoinColumn()
-  build: Build
+  building: Building
 
   @Column({ type: 'text', default: '' })
   electionLocation: string
@@ -99,6 +99,9 @@ export class UnitUser extends GlobalEntity {
 
   @Column({ type: 'text', default: '' })
   profileImage: string
+
+  @Column({ type: 'text', default: '' })
+  position: string
 
   @OneToMany(() => NotUnitUser, (notUnitUser) => notUnitUser.unitUser)
   relationNotUnitUser: NotUnitUser[]
