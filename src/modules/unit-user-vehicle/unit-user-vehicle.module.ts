@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { UnitUserVehicle } from './entities/unit-user-vehicle.entity'
+import { UnitUserVehicleImage } from '../unit-user-vehicle-image/entities/unit-user-vehicle-image.entity'
 import { UnitUserVehicleService } from './unit-user-vehicle.service'
 import { UnitUserVehicleController } from './unit-user-vehicle.controller'
 import { UnitUserModule } from '../unit-user/unit-user.module'
@@ -9,7 +10,7 @@ import { UnitUserVehicleStickerModule } from '../unit-user-vehicle-sticker/unit-
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([UnitUserVehicle]),
+    TypeOrmModule.forFeature([UnitUserVehicle, UnitUserVehicleImage]),
     UnitUserModule,
     UnitUserVehicleImageModule,
     UnitUserVehicleStickerModule,

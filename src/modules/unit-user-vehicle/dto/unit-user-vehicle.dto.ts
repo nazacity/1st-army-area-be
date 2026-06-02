@@ -4,6 +4,18 @@ import { PaginationDto } from 'src/utils/pagination'
 import { UnitUserVehicleStatus } from '../entities/unit-user-vehicle.entity'
 import { Type } from 'class-transformer'
 
+export class UnitUserVehicleImageCreateDto {
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsString()
+  imageUrl: string
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  vehicleId: string
+}
+
 export class VehicleCreateDto {
   @ApiProperty()
   @IsOptional()
@@ -54,6 +66,12 @@ export class VehicleCreateDto {
   @IsOptional()
   @IsEnum(UnitUserVehicleStatus)
   status: UnitUserVehicleStatus
+
+  @ApiProperty({ type: [UnitUserVehicleImageCreateDto], required: false })
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => UnitUserVehicleImageCreateDto)
+  images?: UnitUserVehicleImageCreateDto[]
 }
 
 export class VehicleUpdateDto {
@@ -106,6 +124,12 @@ export class VehicleUpdateDto {
   @IsOptional()
   @IsEnum(UnitUserVehicleStatus)
   status: UnitUserVehicleStatus
+
+  @ApiProperty({ type: [UnitUserVehicleImageCreateDto], required: false })
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => UnitUserVehicleImageCreateDto)
+  images?: UnitUserVehicleImageCreateDto[]
 }
 
 export class VehicleQueryDto extends PaginationDto {

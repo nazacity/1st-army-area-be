@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Like, Repository } from 'typeorm'
 import { UnitUserVehicle } from './entities/unit-user-vehicle.entity'
+import { UnitUserVehicleImage } from '../unit-user-vehicle-image/entities/unit-user-vehicle-image.entity'
 import { VehicleCreateDto, VehicleQueryDto, VehicleUpdateDto } from './dto/unit-user-vehicle.dto'
 import { paginationUtil } from 'src/utils/pagination'
 
@@ -11,17 +12,29 @@ export class UnitUserVehicleService {
   constructor(
     @InjectRepository(UnitUserVehicle)
     private readonly repo: Repository<UnitUserVehicle>,
+    @InjectRepository(UnitUserVehicleImage)
+    private readonly imageRepo: Repository<UnitUserVehicleImage>,
   ) {}
 
   async create(dto: VehicleCreateDto): Promise<UnitUserVehicle> {
     this.logger.log('create-vehicle')
     try {
+      const { images, ...rest } = dto
       const entity = this.repo.create({
-        ...dto,
+        ...rest,
         relationUnitUser: dto.unitUserId ? { id: dto.unitUserId } : undefined,
         stickers: dto.stickerId ? [{ id: dto.stickerId }] : undefined,
       })
-      return await this.repo.save(entity)
+      const saved = await this.repo.save(entity)
+
+      if (images?.length) {
+        const imageEntities = images.map((img) =>
+          this.imageRepo.create({ ...img, vehicle: { id: saved.id } }),
+        )
+        await this.imageRepo.save(imageEntities)
+      }
+
+      return this.getById(saved.id)
     } catch (error) {
       this.logger.debug(error)
       throw new Error(error)
@@ -91,14 +104,28 @@ export class UnitUserVehicleService {
   }): Promise<UnitUserVehicle> {
     this.logger.log('update-vehicle')
     try {
-      return await this.repo.save({
+      const { images, ...rest } = update
+
+      await this.repo.save({
         id,
-        ...update,
+        ...rest,
         relationUnitUser: update.unitUserId
           ? { id: update.unitUserId }
           : undefined,
         stickers: update.stickerId ? [{ id: update.stickerId }] : undefined,
       })
+
+      if (images) {
+        await this.imageRepo.delete({ vehicle: { id } })
+        if (images.length) {
+          const imageEntities = images.map((img) =>
+            this.imageRepo.create({ ...img, vehicle: { id } }),
+          )
+          await this.imageRepo.save(imageEntities)
+        }
+      }
+
+      return this.getById(id)
     } catch (error) {
       this.logger.debug(error)
       throw new Error(error)
