@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Like, Repository } from 'typeorm'
+import { Brackets, Like, Repository } from 'typeorm'
 import { UnitUser } from './entities/unit-user.entity'
 import {
   IDCardUnitUserQueryDto,
@@ -21,6 +21,29 @@ export class UnitUserService {
   async createUnitUser(dto: UnitUserCreateDto): Promise<UnitUser> {
     this.logger.log('create-unit-user')
     try {
+      if (dto.idCardNo || dto.soliderIdCardNo) {
+        const existing = await this.unitUserRepository
+          .createQueryBuilder('u')
+          .where('u.isDeleted = false')
+          .andWhere(
+            new Brackets((qb) => {
+              if (dto.idCardNo) qb.orWhere('u.idCardNo = :idCardNo', { idCardNo: dto.idCardNo })
+              if (dto.soliderIdCardNo) qb.orWhere('u.soliderIdCardNo = :soliderIdCardNo', { soliderIdCardNo: dto.soliderIdCardNo })
+            }),
+          )
+          .getOne()
+
+        if (existing) {
+          this.logger.log('create-unit-user: found existing, updating')
+          return await this.unitUserRepository.save({
+            id: existing.id,
+            ...dto,
+            building: dto.buildId ? { id: dto.buildId } : undefined,
+            unit: dto.unitId ? { id: dto.unitId } : undefined,
+          })
+        }
+      }
+
       const entity = this.unitUserRepository.create({
         ...dto,
         building: dto.buildId ? { id: dto.buildId } : undefined,
