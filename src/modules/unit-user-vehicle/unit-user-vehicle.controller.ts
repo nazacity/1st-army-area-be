@@ -15,7 +15,7 @@ import { ApiTags } from '@nestjs/swagger'
 import { ResponseModel } from 'src/model/response.model'
 import { UnitUserVehicle } from './entities/unit-user-vehicle.entity'
 import { UnitUserVehicleService } from './unit-user-vehicle.service'
-import { VehicleCreateDto, VehicleQueryDto, VehicleUpdateDto } from './dto/unit-user-vehicle.dto'
+import { VehicleCreateDto, VehicleLookupDto, VehicleQueryDto, VehicleUpdateDto } from './dto/unit-user-vehicle.dto'
 
 @ApiTags('Unit User Vehicle')
 @Controller('unit-user-vehicle')
@@ -34,12 +34,12 @@ export class UnitUserVehicleController {
     }
   }
 
-  @Get('license-plate/:licensePlate')
-  async getByLicensePlate(
-    @Param('licensePlate') licensePlate: string,
-  ): Promise<ResponseModel<UnitUserVehicle>> {
+  @Get('lookup')
+  async lookup(
+    @Query() query: VehicleLookupDto,
+  ): Promise<ResponseModel<UnitUserVehicle[]>> {
     try {
-      const data = await this.service.getByLicensePlate(licensePlate)
+      const data = await this.service.getByLicensePlateAndIdCard(query.licensePlate, query.idCardNo)
       return { data }
     } catch (error) {
       throw new HttpException({ message: error.message }, HttpStatus.BAD_REQUEST)

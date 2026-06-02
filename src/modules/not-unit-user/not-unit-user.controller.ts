@@ -17,6 +17,7 @@ import { NotUnitUser } from './entities/not-unit-user.entity'
 import { NotUnitUserService } from './not-unit-user.service'
 import {
   NotUnitUserCreateDto,
+  NotUnitUserLookupDto,
   NotUnitUserQueryDto,
   NotUnitUserUpdateDto,
 } from './dto/not-unit-user.dto'
@@ -38,12 +39,12 @@ export class NotUnitUserController {
     }
   }
 
-  @Get('id-card/:idCardNo')
-  async getByIdCard(
-    @Param('idCardNo') idCardNo: string,
-  ): Promise<ResponseModel<NotUnitUser>> {
+  @Get('lookup')
+  async lookup(
+    @Query() query: NotUnitUserLookupDto,
+  ): Promise<ResponseModel<NotUnitUser[]>> {
     try {
-      const data = await this.notUnitUserService.getNotUnitUserByIdCard(idCardNo)
+      const data = await this.notUnitUserService.getByIdCardAndUnitUserIdCard(query.idCardNo, query.unitUserIdCard)
       return { data }
     } catch (error) {
       throw new HttpException({ message: error.message }, HttpStatus.BAD_REQUEST)

@@ -213,3 +213,15 @@ export class NotUnitUserQueryDto extends PaginationDto {
   @IsString()
   buildId?: string
 }
+
+export class NotUnitUserLookupDto {
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsString()
+  idCardNo: string
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsString()
+  unitUserIdCard: string
+}

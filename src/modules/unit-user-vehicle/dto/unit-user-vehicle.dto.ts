@@ -148,3 +148,15 @@ export class VehicleQueryDto extends PaginationDto {
   @IsString()
   unitUserId?: string
 }
+
+export class VehicleLookupDto {
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsString()
+  licensePlate: string
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsString()
+  idCardNo: string
+}

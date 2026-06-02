@@ -111,11 +111,15 @@ export class NotUnitUserService {
     }
   }
 
-  async getNotUnitUserByIdCard(idCardNo: string): Promise<NotUnitUser> {
-    this.logger.log('get-not-unit-user-by-id-card')
+  async getByIdCardAndUnitUserIdCard(idCardNo: string, unitUserIdCard: string): Promise<NotUnitUser[]> {
+    this.logger.log('get-not-unit-user-by-id-card-and-unit-user-id-card')
     try {
-      return await this.notUnitUserRepository.findOne({
-        where: { idCardNo, isDeleted: false },
+      return await this.notUnitUserRepository.find({
+        where: {
+          idCardNo,
+          unitUser: { idCardNo: unitUserIdCard },
+          isDeleted: false,
+        },
         relations: ['unitUser', 'building', 'documents'],
       })
     } catch (error) {

@@ -82,11 +82,14 @@ export class UnitUserVehicleService {
     }
   }
 
-  async getByLicensePlate(licensePlate: string): Promise<UnitUserVehicle> {
-    this.logger.log('get-vehicle-by-license-plate')
+  async getByLicensePlateAndIdCard(licensePlate: string, idCardNo: string): Promise<UnitUserVehicle[]> {
+    this.logger.log('get-vehicle-by-license-plate-and-id-card')
     try {
-      return await this.repo.findOne({
-        where: { licensePlate, isDeleted: false },
+      return await this.repo.find({
+        where: [
+          { licensePlate, relationUnitUser: { idCardNo }, isDeleted: false },
+          { licensePlate, relationUnitUser: { soliderIdCardNo: idCardNo }, isDeleted: false },
+        ],
         relations: ['images', 'relationUnitUser', 'stickers'],
       })
     } catch (error) {
