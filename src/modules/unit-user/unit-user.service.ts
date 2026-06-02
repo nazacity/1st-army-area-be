@@ -38,7 +38,7 @@ export class UnitUserService {
           return await this.unitUserRepository.save({
             id: existing.id,
             ...dto,
-            building: dto.buildId ? { id: dto.buildId } : undefined,
+            building: dto.buildId ? { id: dto.buildId } : null,
             unit: dto.unitId ? { id: dto.unitId } : undefined,
           })
         }
@@ -46,7 +46,7 @@ export class UnitUserService {
 
       const entity = this.unitUserRepository.create({
         ...dto,
-        building: dto.buildId ? { id: dto.buildId } : undefined,
+        building: dto.buildId ? { id: dto.buildId } : null,
         unit: dto.unitId ? { id: dto.unitId } : undefined,
       })
       return await this.unitUserRepository.save(entity)
@@ -148,7 +148,7 @@ export class UnitUserService {
       return await this.unitUserRepository.save({
         id,
         ...update,
-        building: update.buildId ? { id: update.buildId } : undefined,
+        building: update.buildId ? { id: update.buildId } : null,
         unit: update.unitId ? { id: update.unitId } : undefined,
       })
     } catch (error) {

@@ -57,10 +57,10 @@ export class UnitUserCreateDto {
   @ApiProperty()
   @IsOptional()
   @IsString()
-  buildId: string
+  buildId: string | undefined
 
   @ApiProperty()
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
   unitId: string
 
@@ -129,10 +129,10 @@ export class UnitUserUpdateDto {
   @ApiProperty()
   @IsOptional()
   @IsString()
-  buildId: string
+  buildId: string | undefined
 
   @ApiProperty()
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
   unitId: string
 
