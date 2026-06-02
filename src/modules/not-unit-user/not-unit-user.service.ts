@@ -24,6 +24,31 @@ export class NotUnitUserService {
     this.logger.log('create-not-unit-user')
     try {
       const { documents, unitUserId, buildId, ...rest } = dto
+
+      if (rest.idCardNo) {
+        const existing = await this.notUnitUserRepository.findOne({
+          where: { idCardNo: rest.idCardNo },
+        })
+        if (existing) {
+          const { documents: docs, unitUserId: uid, buildId: bid, ...updateRest } = dto
+          await this.notUnitUserRepository.save({
+            id: existing.id,
+            ...updateRest,
+            isDeleted: false,
+            unitUser: uid ? { id: uid } : undefined,
+            building: bid ? { id: bid } : undefined,
+          })
+          if (docs?.length) {
+            await this.documentRepository.delete({ notUnitUser: { id: existing.id } })
+            const docEntities = docs.map((doc) =>
+              this.documentRepository.create({ ...doc, notUnitUser: { id: existing.id } }),
+            )
+            await this.documentRepository.save(docEntities)
+          }
+          return this.getNotUnitUserById(existing.id)
+        }
+      }
+
       const entity = this.notUnitUserRepository.create({
         ...rest,
         unitUser: unitUserId ? { id: unitUserId } : undefined,
@@ -80,6 +105,19 @@ export class NotUnitUserService {
       })
 
       return { data, total }
+    } catch (error) {
+      this.logger.debug(error)
+      throw new Error(error)
+    }
+  }
+
+  async getNotUnitUserByIdCard(idCardNo: string): Promise<NotUnitUser> {
+    this.logger.log('get-not-unit-user-by-id-card')
+    try {
+      return await this.notUnitUserRepository.findOne({
+        where: { idCardNo, isDeleted: false },
+        relations: ['unitUser', 'building', 'documents'],
+      })
     } catch (error) {
       this.logger.debug(error)
       throw new Error(error)

@@ -38,6 +38,18 @@ export class NotUnitUserController {
     }
   }
 
+  @Get('id-card/:idCardNo')
+  async getByIdCard(
+    @Param('idCardNo') idCardNo: string,
+  ): Promise<ResponseModel<NotUnitUser>> {
+    try {
+      const data = await this.notUnitUserService.getNotUnitUserByIdCard(idCardNo)
+      return { data }
+    } catch (error) {
+      throw new HttpException({ message: error.message }, HttpStatus.BAD_REQUEST)
+    }
+  }
+
   @Get('/:id')
   async getById(
     @Param('id', new ParseUUIDPipe()) id: string,

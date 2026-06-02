@@ -34,6 +34,18 @@ export class UnitUserVehicleController {
     }
   }
 
+  @Get('license-plate/:licensePlate')
+  async getByLicensePlate(
+    @Param('licensePlate') licensePlate: string,
+  ): Promise<ResponseModel<UnitUserVehicle>> {
+    try {
+      const data = await this.service.getByLicensePlate(licensePlate)
+      return { data }
+    } catch (error) {
+      throw new HttpException({ message: error.message }, HttpStatus.BAD_REQUEST)
+    }
+  }
+
   @Get('/:id')
   async getById(
     @Param('id', new ParseUUIDPipe()) id: string,
