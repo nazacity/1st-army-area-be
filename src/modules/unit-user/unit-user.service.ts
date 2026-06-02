@@ -136,6 +136,32 @@ export class UnitUserService {
     }
   }
 
+  async getUnitUserBySoldierNo(soliderIdCardNo: string): Promise<UnitUser> {
+    this.logger.log('get-unit-user-by-soldier-no')
+    try {
+      return await this.unitUserRepository.findOne({
+        where: { soliderIdCardNo, isDeleted: false },
+        relations: ['building', 'building.buildingNo', 'unit', 'relationNotUnitUser'],
+      })
+    } catch (error) {
+      this.logger.debug(error)
+      throw new Error(error)
+    }
+  }
+
+  async getUnitUserByIdCardNo(idCardNo: string): Promise<UnitUser> {
+    this.logger.log('get-unit-user-by-id-card-no')
+    try {
+      return await this.unitUserRepository.findOne({
+        where: { idCardNo, isDeleted: false },
+        relations: ['building', 'building.buildingNo', 'unit', 'relationNotUnitUser'],
+      })
+    } catch (error) {
+      this.logger.debug(error)
+      throw new Error(error)
+    }
+  }
+
   async updateUnitUser({
     id,
     update,

@@ -57,6 +57,36 @@ export class UnitUserController {
     }
   }
 
+  @Get('soldier-no/:soldierNo')
+  async getBySoldierNo(
+    @Param('soldierNo') soldierNo: string,
+  ): Promise<ResponseModel<UnitUser>> {
+    try {
+      const data = await this.unitUserService.getUnitUserBySoldierNo(soldierNo)
+      return { data }
+    } catch (error) {
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+  }
+
+  @Get('id-card-no/:idCardNo')
+  async getByIdCardNo(
+    @Param('idCardNo') idCardNo: string,
+  ): Promise<ResponseModel<UnitUser>> {
+    try {
+      const data = await this.unitUserService.getUnitUserByIdCardNo(idCardNo)
+      return { data }
+    } catch (error) {
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+  }
+
   @Get('/:id')
   async getById(
     @Param('id', new ParseUUIDPipe()) id: string,
