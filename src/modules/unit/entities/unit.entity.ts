@@ -1,6 +1,7 @@
 import { GlobalEntity } from 'src/utils/global-entity'
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm'
 import { UnitUser } from 'src/modules/unit-user/entities/unit-user.entity'
+import { BuildingNo } from 'src/modules/building/entities/building-no.entity'
 
 const data = [
   {
@@ -32,4 +33,7 @@ export class Unit extends GlobalEntity {
 
   @OneToMany(() => UnitUser, (unitUser) => unitUser.unit)
   unitUsers: UnitUser[]
+
+  @OneToMany(() => BuildingNo, (buildingNo) => buildingNo.unit)
+  buildingNos: BuildingNo[]
 }

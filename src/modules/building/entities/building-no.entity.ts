@@ -1,5 +1,6 @@
 import { GlobalEntity } from 'src/utils/global-entity'
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm'
+import { Unit } from 'src/modules/unit/entities/unit.entity'
+import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm'
 import { Building } from './building.entity'
 
 @Entity({
@@ -11,6 +12,9 @@ export class BuildingNo extends GlobalEntity {
 
   @Column({ type: 'text', default: '' })
   buildNo: string
+
+  @ManyToOne(() => Unit, (unit) => unit.buildingNos)
+  unit: Unit
 
   @OneToMany(() => Building, (building) => building.buildingNo)
   buildings: Building[]

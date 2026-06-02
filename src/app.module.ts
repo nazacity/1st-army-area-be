@@ -30,6 +30,7 @@ import { UnitUserDocumentModule } from './modules/unit-user-document/unit-user-d
 import { NotUnitUserDocumentModule } from './modules/not-unit-user-document/not-unit-user-document.module';
 import { UnitUserVehicleDocumentModule } from './modules/unit-user-vehicle-document/unit-user-vehicle-document.module';
 import { CavaryR2Module } from './modules/cavary-r2/cavary-r2.module';
+import { UnitSummaryModule } from './modules/unit-summary/unit-summary.module';
 
 // Scheduler
 
@@ -95,6 +96,7 @@ import { CavaryR2Module } from './modules/cavary-r2/cavary-r2.module';
     NotUnitUserDocumentModule,
     UnitUserVehicleDocumentModule,
     CavaryR2Module,
+    UnitSummaryModule,
   ],
   providers: [
     {

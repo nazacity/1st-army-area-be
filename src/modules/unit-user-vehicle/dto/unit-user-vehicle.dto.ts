@@ -1,7 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IsEnum, IsOptional, IsString } from 'class-validator'
+import { IsEnum, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator'
 import { PaginationDto } from 'src/utils/pagination'
 import { UnitUserVehicleStatus } from '../entities/unit-user-vehicle.entity'
+import { Type } from 'class-transformer'
 
 export class VehicleCreateDto {
   @ApiProperty()

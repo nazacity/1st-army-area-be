@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator'
+import { IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator'
 import { PaginationDto } from 'src/utils/pagination'
 
 export class BuildingNoCreateDto {
@@ -7,6 +7,11 @@ export class BuildingNoCreateDto {
   @IsNotEmpty()
   @IsString()
   buildNo: string
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsUUID()
+  unitId: string
 }
 
 export class BuildingNoUpdateDto {
@@ -14,6 +19,11 @@ export class BuildingNoUpdateDto {
   @IsOptional()
   @IsString()
   buildNo: string
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsUUID()
+  unitId: string
 }
 
 export class BuildingNoQueryDto extends PaginationDto {
