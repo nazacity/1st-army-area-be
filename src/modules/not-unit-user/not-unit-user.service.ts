@@ -62,6 +62,23 @@ export class NotUnitUserService {
     try {
       const { take, skip } = paginationUtil(query)
 
+      if (query.electionLocation === 'อื่นๆ') {
+        const qb = this.notUnitUserRepository.createQueryBuilder('nu')
+          .leftJoinAndSelect('nu.unitUser', 'unitUser')
+          .leftJoinAndSelect('nu.building', 'building')
+          .leftJoinAndSelect('nu.documents', 'documents')
+          .where('nu.isDeleted = :isDeleted', { isDeleted: false })
+          .andWhere('nu.electionLocation NOT IN (:...locations)', { locations: ['พื้นที่สนามเป้า', 'พื้นที่สระบุรี'] })
+
+        if (query.status) qb.andWhere('nu.status = :status', { status: query.status })
+        if (query.unitUserId) qb.andWhere('nu.unitUserId = :unitUserId', { unitUserId: query.unitUserId })
+        if (query.buildId) qb.andWhere('nu.buildingId = :buildId', { buildId: query.buildId })
+        if (query.searchText) qb.andWhere('(nu.firstName ILIKE :search OR nu.lastName ILIKE :search)', { search: `%${query.searchText}%` })
+
+        const [data, total] = await qb.orderBy('nu.createdAt', 'DESC').take(take).skip(skip).getManyAndCount()
+        return { data, total }
+      }
+
       const [data, total] = await this.notUnitUserRepository.findAndCount({
         where: [
           {
@@ -69,6 +86,7 @@ export class NotUnitUserService {
             ...(query.status && { status: query.status }),
             ...(query.unitUserId && { unitUser: { id: query.unitUserId } }),
             ...(query.buildId && { building: { id: query.buildId } }),
+            ...(query.electionLocation && { electionLocation: query.electionLocation }),
             ...(query.searchText && {
               firstName: Like(`%${query.searchText}%`),
             }),
@@ -78,6 +96,7 @@ export class NotUnitUserService {
             ...(query.status && { status: query.status }),
             ...(query.unitUserId && { unitUser: { id: query.unitUserId } }),
             ...(query.buildId && { building: { id: query.buildId } }),
+            ...(query.electionLocation && { electionLocation: query.electionLocation }),
             ...(query.searchText && {
               lastName: Like(`%${query.searchText}%`),
             }),

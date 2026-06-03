@@ -79,4 +79,28 @@ export class UnitSummaryController {
       )
     }
   }
+
+  @Get('unit-user/election-location-summary')
+  async getUnitUserElectionLocationSummary() {
+    try {
+      return await this.unitSummaryService.getUnitUserElectionLocationSummary()
+    } catch (error) {
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+  }
+
+  @Get('not-unit-user/election-location-summary')
+  async getNotUnitUserElectionLocationSummary() {
+    try {
+      return await this.unitSummaryService.getNotUnitUserElectionLocationSummary()
+    } catch (error) {
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+  }
 }

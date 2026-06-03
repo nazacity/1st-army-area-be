@@ -192,6 +192,11 @@ export class UnitUserQueryDto extends PaginationDto {
   @IsOptional()
   @IsString()
   soliderIdCardNo?: string
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  electionLocation?: string
 }
 
 export class IDCardUnitUserQueryDto {

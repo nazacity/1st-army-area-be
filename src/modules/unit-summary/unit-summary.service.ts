@@ -8,6 +8,7 @@ import { Building } from '../building/entities/building.entity'
 import { paginationUtil } from 'src/utils/pagination'
 import {
   BuildingSummaryQueryDto,
+  ElectionLocation,
   NotUnitUserSummaryQueryDto,
   UnitUserSummaryQueryDto,
   VehicleSummaryQueryDto,
@@ -137,5 +138,53 @@ export class UnitSummaryService {
     })
 
     return { meta: { total }, data }
+  }
+
+  async getUnitUserElectionLocationSummary() {
+    this.logger.log('get-unit-user-election-location-summary')
+    const knownLocations = [ElectionLocation.พื้นที่สนามเป้า, ElectionLocation.พื้นที่สระบุรี]
+
+    const counts = await Promise.all(
+      knownLocations.map(async (location) => {
+        const count = await this.unitUserRepo.count({
+          where: { isDeleted: false, electionLocation: location },
+        })
+        return { electionLocation: location, count }
+      }),
+    )
+
+    const otherCount = await this.unitUserRepo
+      .createQueryBuilder('u')
+      .where('u.isDeleted = :isDeleted', { isDeleted: false })
+      .andWhere('u.electionLocation NOT IN (:...locations)', { locations: knownLocations })
+      .getCount()
+
+    const total = counts.reduce((sum, c) => sum + c.count, 0) + otherCount
+
+    return { data: { summary: [...counts, { electionLocation: 'อื่นๆ', count: otherCount }], total } }
+  }
+
+  async getNotUnitUserElectionLocationSummary() {
+    this.logger.log('get-not-unit-user-election-location-summary')
+    const knownLocations = [ElectionLocation.พื้นที่สนามเป้า, ElectionLocation.พื้นที่สระบุรี]
+
+    const counts = await Promise.all(
+      knownLocations.map(async (location) => {
+        const count = await this.notUnitUserRepo.count({
+          where: { isDeleted: false, electionLocation: location },
+        })
+        return { electionLocation: location, count }
+      }),
+    )
+
+    const otherCount = await this.notUnitUserRepo
+      .createQueryBuilder('nu')
+      .where('nu.isDeleted = :isDeleted', { isDeleted: false })
+      .andWhere('nu.electionLocation NOT IN (:...locations)', { locations: knownLocations })
+      .getCount()
+
+    const total = counts.reduce((sum, c) => sum + c.count, 0) + otherCount
+
+    return { data: { summary: [...counts, { electionLocation: 'อื่นๆ', count: otherCount }], total } }
   }
 }

@@ -212,6 +212,11 @@ export class NotUnitUserQueryDto extends PaginationDto {
   @IsOptional()
   @IsString()
   buildId?: string
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  electionLocation?: string
 }
 
 export class NotUnitUserLookupDto {

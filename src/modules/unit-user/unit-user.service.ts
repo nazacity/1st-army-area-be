@@ -63,6 +63,7 @@ export class UnitUserService {
         ...(query.rank && { rank: query.rank }),
         ...(query.buildId && { building: { id: query.buildId } }),
         ...(query.unitId && { unit: { id: query.unitId } }),
+        ...(query.electionLocation && query.electionLocation !== 'อื่นๆ' && { electionLocation: query.electionLocation }),
       }
 
       const searchFields = query.searchText
@@ -73,6 +74,25 @@ export class UnitUserService {
             { ...baseWhere, soliderIdCardNo: Like(`%${query.searchText}%`) },
           ]
         : [baseWhere]
+
+      if (query.electionLocation === 'อื่นๆ') {
+        const qb = this.unitUserRepository.createQueryBuilder('u')
+          .leftJoinAndSelect('u.building', 'building')
+          .leftJoinAndSelect('building.buildingNo', 'buildingNo')
+          .leftJoinAndSelect('u.unit', 'unit')
+          .leftJoinAndSelect('u.relationNotUnitUser', 'relationNotUnitUser')
+          .where('u.isDeleted = :isDeleted', { isDeleted: false })
+          .andWhere('u.electionLocation NOT IN (:...locations)', { locations: ['พื้นที่สนามเป้า', 'พื้นที่สระบุรี'] })
+
+        if (query.status) qb.andWhere('u.status = :status', { status: query.status })
+        if (query.rank) qb.andWhere('u.rank = :rank', { rank: query.rank })
+        if (query.buildId) qb.andWhere('u.buildingId = :buildId', { buildId: query.buildId })
+        if (query.unitId) qb.andWhere('u.unitId = :unitId', { unitId: query.unitId })
+        if (query.searchText) qb.andWhere('(u.firstName ILIKE :search OR u.lastName ILIKE :search OR u.idCardNo ILIKE :search OR u.soliderIdCardNo ILIKE :search)', { search: `%${query.searchText}%` })
+
+        const [data, total] = await qb.orderBy('u.createdAt', 'DESC').take(take).skip(skip).getManyAndCount()
+        return { data, total }
+      }
 
       const [data, total] = await this.unitUserRepository.findAndCount({
         where: searchFields,

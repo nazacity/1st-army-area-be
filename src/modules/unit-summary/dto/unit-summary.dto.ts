@@ -6,6 +6,19 @@ import { NotUnitUserStatus } from 'src/modules/not-unit-user/entities/not-unit-u
 import { UnitUserVehicleStatus } from 'src/modules/unit-user-vehicle/entities/unit-user-vehicle.entity'
 import { BuildingStatus, BuildingType } from 'src/modules/building/entities/building.entity'
 
+export enum ElectionLocation {
+  พื้นที่สนามเป้า = 'พื้นที่สนามเป้า',
+  พื้นที่สระบุรี = 'พื้นที่สระบุรี',
+  อื่นๆ = 'อื่นๆ',
+}
+
+export class ElectionLocationSummaryQueryDto extends PaginationDto {
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  searchText?: string
+}
+
 export class UnitUserSummaryQueryDto extends PaginationDto {
   @ApiProperty({ required: false, enum: UnitUserStatus })
   @IsOptional()
