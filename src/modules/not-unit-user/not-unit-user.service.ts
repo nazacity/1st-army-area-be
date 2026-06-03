@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { ConflictException, Injectable, Logger } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Like, Repository } from 'typeorm'
 import { NotUnitUser } from './entities/not-unit-user.entity'
@@ -30,22 +30,7 @@ export class NotUnitUserService {
           where: { idCardNo: rest.idCardNo },
         })
         if (existing) {
-          const { documents: docs, unitUserId: uid, buildId: bid, ...updateRest } = dto
-          await this.notUnitUserRepository.save({
-            id: existing.id,
-            ...updateRest,
-            isDeleted: false,
-            unitUser: uid ? { id: uid } : undefined,
-            building: bid ? { id: bid } : undefined,
-          })
-          if (docs?.length) {
-            await this.documentRepository.delete({ notUnitUser: { id: existing.id } })
-            const docEntities = docs.map((doc) =>
-              this.documentRepository.create({ ...doc, notUnitUser: { id: existing.id } }),
-            )
-            await this.documentRepository.save(docEntities)
-          }
-          return this.getNotUnitUserById(existing.id)
+          throw new ConflictException(`Not unit user with id card "${rest.idCardNo}" already exists`)
         }
       }
 

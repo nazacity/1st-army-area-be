@@ -34,13 +34,7 @@ export class UnitUserService {
           .getOne()
 
         if (existing) {
-          this.logger.log('create-unit-user: found existing, updating')
-          return await this.unitUserRepository.save({
-            id: existing.id,
-            ...dto,
-            building: dto.buildId ? { id: dto.buildId } : null,
-            unit: dto.unitId ? { id: dto.unitId } : undefined,
-          })
+          throw new Error('ข้อมูลบัตรประชาชนหรือเลขที่หมายเลขทหารมีอยู่ในระบบแล้ว')
         }
       }
 

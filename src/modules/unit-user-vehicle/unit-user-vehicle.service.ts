@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { ConflictException, Injectable, Logger } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Like, Repository } from 'typeorm'
 import { UnitUserVehicle } from './entities/unit-user-vehicle.entity'
@@ -20,6 +20,16 @@ export class UnitUserVehicleService {
     this.logger.log('create-vehicle')
     try {
       const { images, ...rest } = dto
+
+      if (dto.licensePlate) {
+        const existing = await this.repo.findOne({
+          where: { licensePlate: dto.licensePlate, isDeleted: false },
+        })
+        if (existing) {
+          throw new ConflictException(`Vehicle with license plate "${dto.licensePlate}" already exists`)
+        }
+      }
+
       const entity = this.repo.create({
         ...rest,
         relationUnitUser: dto.unitUserId ? { id: dto.unitUserId } : undefined,
