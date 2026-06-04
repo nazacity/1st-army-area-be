@@ -4,9 +4,13 @@ import {
   HttpException,
   HttpStatus,
   Query,
+  Request,
+  UseGuards,
 } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { ResponseModel } from 'src/model/response.model'
+import { RequestAdminUserModel } from 'src/model/request.model'
+import { AdminJwtAuthGuard } from 'src/modules/auth/guard/admin-auth.guard'
 import { UnitSummaryService } from './unit-summary.service'
 import {
   BuildingSummaryQueryDto,
@@ -21,15 +25,18 @@ import { Building } from '../building/entities/building.entity'
 
 @ApiTags('Unit Summary')
 @Controller('unit-summary')
+@UseGuards(AdminJwtAuthGuard)
 export class UnitSummaryController {
   constructor(private readonly unitSummaryService: UnitSummaryService) {}
 
   @Get('unit-user')
   async getUnitUsers(
     @Query() query: UnitUserSummaryQueryDto,
+    @Request() req: RequestAdminUserModel,
   ): Promise<ResponseModel<UnitUser[]>> {
     try {
-      return await this.unitSummaryService.getUnitUsers(query)
+      const adminUnitIds = req.user.units?.map((u) => u.id) ?? []
+      return await this.unitSummaryService.getUnitUsers(query, adminUnitIds)
     } catch (error) {
       throw new HttpException(
         { message: error.message },
@@ -41,9 +48,11 @@ export class UnitSummaryController {
   @Get('not-unit-user')
   async getNotUnitUsers(
     @Query() query: NotUnitUserSummaryQueryDto,
+    @Request() req: RequestAdminUserModel,
   ): Promise<ResponseModel<NotUnitUser[]>> {
     try {
-      return await this.unitSummaryService.getNotUnitUsers(query)
+      const adminUnitIds = req.user.units?.map((u) => u.id) ?? []
+      return await this.unitSummaryService.getNotUnitUsers(query, adminUnitIds)
     } catch (error) {
       throw new HttpException(
         { message: error.message },
@@ -55,9 +64,11 @@ export class UnitSummaryController {
   @Get('vehicle')
   async getVehicles(
     @Query() query: VehicleSummaryQueryDto,
+    @Request() req: RequestAdminUserModel,
   ): Promise<ResponseModel<UnitUserVehicle[]>> {
     try {
-      return await this.unitSummaryService.getVehicles(query)
+      const adminUnitIds = req.user.units?.map((u) => u.id) ?? []
+      return await this.unitSummaryService.getVehicles(query, adminUnitIds)
     } catch (error) {
       throw new HttpException(
         { message: error.message },
@@ -69,9 +80,11 @@ export class UnitSummaryController {
   @Get('building')
   async getBuildings(
     @Query() query: BuildingSummaryQueryDto,
+    @Request() req: RequestAdminUserModel,
   ): Promise<ResponseModel<Building[]>> {
     try {
-      return await this.unitSummaryService.getBuildings(query)
+      const adminUnitIds = req.user.units?.map((u) => u.id) ?? []
+      return await this.unitSummaryService.getBuildings(query, adminUnitIds)
     } catch (error) {
       throw new HttpException(
         { message: error.message },
@@ -81,9 +94,12 @@ export class UnitSummaryController {
   }
 
   @Get('unit-user/election-location-summary')
-  async getUnitUserElectionLocationSummary() {
+  async getUnitUserElectionLocationSummary(
+    @Request() req: RequestAdminUserModel,
+  ) {
     try {
-      return await this.unitSummaryService.getUnitUserElectionLocationSummary()
+      const adminUnitIds = req.user.units?.map((u) => u.id) ?? []
+      return await this.unitSummaryService.getUnitUserElectionLocationSummary(adminUnitIds)
     } catch (error) {
       throw new HttpException(
         { message: error.message },
@@ -93,9 +109,12 @@ export class UnitSummaryController {
   }
 
   @Get('not-unit-user/election-location-summary')
-  async getNotUnitUserElectionLocationSummary() {
+  async getNotUnitUserElectionLocationSummary(
+    @Request() req: RequestAdminUserModel,
+  ) {
     try {
-      return await this.unitSummaryService.getNotUnitUserElectionLocationSummary()
+      const adminUnitIds = req.user.units?.map((u) => u.id) ?? []
+      return await this.unitSummaryService.getNotUnitUserElectionLocationSummary(adminUnitIds)
     } catch (error) {
       throw new HttpException(
         { message: error.message },
