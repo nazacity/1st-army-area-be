@@ -5,13 +5,16 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  ValidateNested,
 } from 'class-validator'
 import { PaginationDto } from 'src/utils/pagination'
+import { Type } from 'class-transformer'
 import {
   UnitUserGender,
   UnitUserRank,
   UnitUserStatus,
 } from '../entities/unit-user.entity'
+import { UnitUserDocumentCreateDto } from '../../unit-user-document/dto/unit-user-document.dto'
 
 export class UnitUserCreateDto {
   @ApiProperty()
@@ -83,6 +86,12 @@ export class UnitUserCreateDto {
   @IsOptional()
   @IsString()
   position: string
+
+  @ApiProperty({ type: [UnitUserDocumentCreateDto], required: false })
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => UnitUserDocumentCreateDto)
+  documents?: UnitUserDocumentCreateDto[]
 }
 
 export class UnitUserUpdateDto {
@@ -155,6 +164,12 @@ export class UnitUserUpdateDto {
   @IsOptional()
   @IsString()
   position: string
+
+  @ApiProperty({ type: [UnitUserDocumentCreateDto], required: false })
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => UnitUserDocumentCreateDto)
+  documents?: UnitUserDocumentCreateDto[]
 }
 
 export class UnitUserQueryDto extends PaginationDto {

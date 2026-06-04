@@ -55,6 +55,11 @@ export class VehicleCreateDto {
   @ApiProperty()
   @IsOptional()
   @IsString()
+  phoneNumber: string
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
   unitUserId: string
 
   @ApiProperty()
@@ -109,6 +114,11 @@ export class VehicleUpdateDto {
   @IsOptional()
   @IsString()
   ownerFullName: string
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  phoneNumber: string
 
   @ApiProperty()
   @IsOptional()

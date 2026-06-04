@@ -4,8 +4,10 @@ import {
   HttpException,
   HttpStatus,
   Query,
+  UseGuards,
 } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
+import { AdminJwtAuthGuard } from 'src/modules/auth/guard/admin-auth.guard'
 import { UserScoreHistoryService } from '../user-score-history/user-score-history.service'
 import { UserScoreInfoService } from '../user-score-info/user-score-info.service'
 import { UserService } from '../user/user.service'
@@ -14,6 +16,7 @@ import { SummaryByPublicQueryDto } from './dto/summary.dto'
 
 @ApiTags('Summary')
 @Controller('summary')
+@UseGuards(AdminJwtAuthGuard)
 export class SummaryController {
   constructor(
     private readonly userScoreHistoryService: UserScoreHistoryService,

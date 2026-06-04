@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Brackets, Like, Repository } from 'typeorm'
 import { UnitUser } from './entities/unit-user.entity'
+import { UnitUserDocument } from '../unit-user-document/entities/unit-user-document.entity'
 import {
   IDCardUnitUserQueryDto,
   UnitUserCreateDto,
@@ -16,9 +17,11 @@ export class UnitUserService {
   constructor(
     @InjectRepository(UnitUser)
     private readonly unitUserRepository: Repository<UnitUser>,
+    @InjectRepository(UnitUserDocument)
+    private readonly documentRepository: Repository<UnitUserDocument>,
   ) {}
 
-  async createUnitUser(dto: UnitUserCreateDto): Promise<UnitUser> {
+  async createUnitUser(dto: UnitUserCreateDto, adminId?: string): Promise<UnitUser> {
     this.logger.log('create-unit-user')
     try {
       if (dto.idCardNo || dto.soliderIdCardNo) {
@@ -38,12 +41,23 @@ export class UnitUserService {
         }
       }
 
+      const { documents, ...rest } = dto
       const entity = this.unitUserRepository.create({
-        ...dto,
+        ...rest,
         building: dto.buildId ? { id: dto.buildId } : null,
         unit: dto.unitId ? { id: dto.unitId } : undefined,
+        ...(adminId && { createdBy: { id: adminId }, updatedBy: { id: adminId } }),
       })
-      return await this.unitUserRepository.save(entity)
+      const saved = await this.unitUserRepository.save(entity)
+
+      if (documents?.length) {
+        const docEntities = documents.map((doc) =>
+          this.documentRepository.create({ ...doc, unitUser: { id: saved.id } }),
+        )
+        await this.documentRepository.save(docEntities)
+      }
+
+      return this.getUnitUserById(saved.id)
     } catch (error) {
       this.logger.debug(error)
       throw new Error(error)
@@ -52,10 +66,13 @@ export class UnitUserService {
 
   async getAllUnitUsers(
     query: UnitUserQueryDto,
+    adminUnitIds: string[] = [],
   ): Promise<{ data: UnitUser[]; total: number }> {
     this.logger.log('get-all-unit-users')
     try {
       const { take, skip } = paginationUtil(query)
+
+      const shouldFilterByUnit = adminUnitIds.length > 0
 
       const baseWhere = {
         isDeleted: false,
@@ -84,6 +101,8 @@ export class UnitUserService {
           .where('u.isDeleted = :isDeleted', { isDeleted: false })
           .andWhere('u.electionLocation NOT IN (:...locations)', { locations: ['พื้นที่สนามเป้า', 'พื้นที่สระบุรี'] })
 
+        if (shouldFilterByUnit) qb.andWhere('u.unitId IN (:...adminUnitIds)', { adminUnitIds })
+
         if (query.status) qb.andWhere('u.status = :status', { status: query.status })
         if (query.rank) qb.andWhere('u.rank = :rank', { rank: query.rank })
         if (query.buildId) qb.andWhere('u.buildingId = :buildId', { buildId: query.buildId })
@@ -101,6 +120,11 @@ export class UnitUserService {
         take,
         skip,
       })
+
+      if (shouldFilterByUnit) {
+        const filtered = data.filter((u) => adminUnitIds.includes(u.unit?.id))
+        return { data: filtered, total: filtered.length }
+      }
 
       return { data, total }
     } catch (error) {
@@ -179,28 +203,48 @@ export class UnitUserService {
   async updateUnitUser({
     id,
     update,
+    adminId,
   }: {
     id: string
     update: UnitUserUpdateDto
+    adminId?: string
   }): Promise<UnitUser> {
     this.logger.log('update-unit-user')
     try {
-      return await this.unitUserRepository.save({
+      const { documents, ...rest } = update
+
+      await this.unitUserRepository.save({
         id,
-        ...update,
+        ...rest,
         building: update.buildId ? { id: update.buildId } : null,
         unit: update.unitId ? { id: update.unitId } : undefined,
+        ...(adminId && { updatedBy: { id: adminId } }),
       })
+
+      if (documents) {
+        await this.documentRepository.delete({ unitUser: { id } })
+        if (documents.length) {
+          const docEntities = documents.map((doc) =>
+            this.documentRepository.create({ ...doc, unitUser: { id } }),
+          )
+          await this.documentRepository.save(docEntities)
+        }
+      }
+
+      return this.getUnitUserById(id)
     } catch (error) {
       this.logger.debug(error)
       throw new Error(error)
     }
   }
 
-  async deleteUnitUser(id: string): Promise<boolean> {
+  async deleteUnitUser(id: string, adminId?: string): Promise<boolean> {
     this.logger.log('delete-unit-user')
     try {
-      await this.unitUserRepository.update(id, { isDeleted: true })
+      await this.unitUserRepository.update(id, {
+        isDeleted: true,
+        ...(adminId && { updatedBy: { id: adminId } }),
+      })
       return true
     } catch (error) {
       this.logger.debug(error)

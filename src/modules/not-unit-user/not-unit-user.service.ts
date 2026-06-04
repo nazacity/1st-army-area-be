@@ -20,7 +20,7 @@ export class NotUnitUserService {
     private readonly documentRepository: Repository<NotUnitUserDocument>,
   ) {}
 
-  async createNotUnitUser(dto: NotUnitUserCreateDto): Promise<NotUnitUser> {
+  async createNotUnitUser(dto: NotUnitUserCreateDto, adminId?: string): Promise<NotUnitUser> {
     this.logger.log('create-not-unit-user')
     try {
       const { documents, unitUserId, buildId, ...rest } = dto
@@ -38,6 +38,7 @@ export class NotUnitUserService {
         ...rest,
         unitUser: unitUserId ? { id: unitUserId } : undefined,
         building: buildId ? { id: buildId } : undefined,
+        ...(adminId && { createdBy: { id: adminId }, updatedBy: { id: adminId } }),
       })
       const saved = await this.notUnitUserRepository.save(entity)
 
@@ -57,18 +58,23 @@ export class NotUnitUserService {
 
   async getAllNotUnitUsers(
     query: NotUnitUserQueryDto,
+    adminUnitIds: string[] = [],
   ): Promise<{ data: NotUnitUser[]; total: number }> {
     this.logger.log('get-all-not-unit-users')
     try {
       const { take, skip } = paginationUtil(query)
+      const shouldFilterByUnit = adminUnitIds.length > 0
 
       if (query.electionLocation === 'อื่นๆ') {
         const qb = this.notUnitUserRepository.createQueryBuilder('nu')
           .leftJoinAndSelect('nu.unitUser', 'unitUser')
+          .leftJoinAndSelect('unitUser.unit', 'unitUserUnit')
           .leftJoinAndSelect('nu.building', 'building')
           .leftJoinAndSelect('nu.documents', 'documents')
           .where('nu.isDeleted = :isDeleted', { isDeleted: false })
           .andWhere('nu.electionLocation NOT IN (:...locations)', { locations: ['พื้นที่สนามเป้า', 'พื้นที่สระบุรี'] })
+
+        if (shouldFilterByUnit) qb.andWhere('unitUserUnit.id IN (:...adminUnitIds)', { adminUnitIds })
 
         if (query.status) qb.andWhere('nu.status = :status', { status: query.status })
         if (query.unitUserId) qb.andWhere('nu.unitUserId = :unitUserId', { unitUserId: query.unitUserId })
@@ -102,11 +108,16 @@ export class NotUnitUserService {
             }),
           },
         ],
-        relations: ['unitUser', 'building', 'documents'],
+        relations: ['unitUser', 'unitUser.unit', 'building', 'documents'],
         order: { createdAt: 'DESC' },
         take,
         skip,
       })
+
+      if (shouldFilterByUnit) {
+        const filtered = data.filter((nu) => adminUnitIds.includes(nu.unitUser?.unit?.id))
+        return { data: filtered, total: filtered.length }
+      }
 
       return { data, total }
     } catch (error) {
@@ -148,9 +159,11 @@ export class NotUnitUserService {
   async updateNotUnitUser({
     id,
     update,
+    adminId,
   }: {
     id: string
     update: NotUnitUserUpdateDto
+    adminId?: string
   }): Promise<NotUnitUser> {
     this.logger.log('update-not-unit-user')
     try {
@@ -161,6 +174,7 @@ export class NotUnitUserService {
         ...rest,
         unitUser: unitUserId ? { id: unitUserId } : undefined,
         building: buildId ? { id: buildId } : undefined,
+        ...(adminId && { updatedBy: { id: adminId } }),
       })
 
       if (documents) {
@@ -180,10 +194,13 @@ export class NotUnitUserService {
     }
   }
 
-  async deleteNotUnitUser(id: string): Promise<boolean> {
+  async deleteNotUnitUser(id: string, adminId?: string): Promise<boolean> {
     this.logger.log('delete-not-unit-user')
     try {
-      await this.notUnitUserRepository.update(id, { isDeleted: true })
+      await this.notUnitUserRepository.update(id, {
+        isDeleted: true,
+        ...(adminId && { updatedBy: { id: adminId } }),
+      })
       return true
     } catch (error) {
       this.logger.debug(error)

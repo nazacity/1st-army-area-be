@@ -16,7 +16,7 @@ export class UnitUserVehicleService {
     private readonly imageRepo: Repository<UnitUserVehicleImage>,
   ) {}
 
-  async create(dto: VehicleCreateDto): Promise<UnitUserVehicle> {
+  async create(dto: VehicleCreateDto, adminId?: string): Promise<UnitUserVehicle> {
     this.logger.log('create-vehicle')
     try {
       const { images, ...rest } = dto
@@ -34,6 +34,7 @@ export class UnitUserVehicleService {
         ...rest,
         relationUnitUser: dto.unitUserId ? { id: dto.unitUserId } : undefined,
         stickers: dto.stickerId ? [{ id: dto.stickerId }] : undefined,
+        ...(adminId && { createdBy: { id: adminId }, updatedBy: { id: adminId } }),
       })
       const saved = await this.repo.save(entity)
 
@@ -53,10 +54,13 @@ export class UnitUserVehicleService {
 
   async getAll(
     query: VehicleQueryDto,
+    adminUnitIds: string[] = [],
   ): Promise<{ data: UnitUserVehicle[]; total: number }> {
     this.logger.log('get-all-vehicles')
     try {
       const { take, skip } = paginationUtil(query)
+      const shouldFilterByUnit = adminUnitIds.length > 0
+
       const [data, total] = await this.repo.findAndCount({
         where: [
           {
@@ -80,11 +84,17 @@ export class UnitUserVehicleService {
             }),
           },
         ],
-        relations: ['images', 'relationUnitUser', 'stickers'],
+        relations: ['images', 'relationUnitUser', 'relationUnitUser.unit', 'stickers'],
         order: { createdAt: 'DESC' },
         take,
         skip,
       })
+
+      if (shouldFilterByUnit) {
+        const filtered = data.filter((v) => adminUnitIds.includes(v.relationUnitUser?.unit?.id))
+        return { data: filtered, total: filtered.length }
+      }
+
       return { data, total }
     } catch (error) {
       this.logger.debug(error)
@@ -124,9 +134,11 @@ export class UnitUserVehicleService {
   async update({
     id,
     update,
+    adminId,
   }: {
     id: string
     update: VehicleUpdateDto
+    adminId?: string
   }): Promise<UnitUserVehicle> {
     this.logger.log('update-vehicle')
     try {
@@ -139,6 +151,7 @@ export class UnitUserVehicleService {
           ? { id: update.unitUserId }
           : undefined,
         stickers: update.stickerId ? [{ id: update.stickerId }] : undefined,
+        ...(adminId && { updatedBy: { id: adminId } }),
       })
 
       if (images) {
@@ -158,10 +171,13 @@ export class UnitUserVehicleService {
     }
   }
 
-  async delete(id: string): Promise<boolean> {
+  async delete(id: string, adminId?: string): Promise<boolean> {
     this.logger.log('delete-vehicle')
     try {
-      await this.repo.update(id, { isDeleted: true })
+      await this.repo.update(id, {
+        isDeleted: true,
+        ...(adminId && { updatedBy: { id: adminId } }),
+      })
       return true
     } catch (error) {
       this.logger.debug(error)

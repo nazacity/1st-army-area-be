@@ -1,7 +1,8 @@
 import { GlobalEntity } from 'src/utils/global-entity'
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm'
+import { Column, Entity, JoinColumn, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm'
 import { UnitUser } from 'src/modules/unit-user/entities/unit-user.entity'
 import { BuildingNo } from 'src/modules/building/entities/building-no.entity'
+import { Admin } from 'src/modules/admin/entities/admin.entity'
 
 const data = [
   {
@@ -36,4 +37,15 @@ export class Unit extends GlobalEntity {
 
   @OneToMany(() => BuildingNo, (buildingNo) => buildingNo.unit)
   buildingNos: BuildingNo[]
+
+  @ManyToMany(() => Admin, (admin) => admin.units)
+  admins: Admin[]
+
+  @ManyToOne(() => Admin, { nullable: true })
+  @JoinColumn({ name: 'createdBy' })
+  createdBy: Admin
+
+  @ManyToOne(() => Admin, { nullable: true })
+  @JoinColumn({ name: 'updatedBy' })
+  updatedBy: Admin
 }

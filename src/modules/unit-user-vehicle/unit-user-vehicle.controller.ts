@@ -10,24 +10,31 @@ import {
   Patch,
   Post,
   Query,
+  Request,
+  UseGuards,
 } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { ResponseModel } from 'src/model/response.model'
+import { RequestAdminUserModel } from 'src/model/request.model'
+import { AdminJwtAuthGuard } from 'src/modules/auth/guard/admin-auth.guard'
 import { UnitUserVehicle } from './entities/unit-user-vehicle.entity'
 import { UnitUserVehicleService } from './unit-user-vehicle.service'
 import { VehicleCreateDto, VehicleLookupDto, VehicleQueryDto, VehicleUpdateDto } from './dto/unit-user-vehicle.dto'
 
 @ApiTags('Unit User Vehicle')
 @Controller('unit-user-vehicle')
+@UseGuards(AdminJwtAuthGuard)
 export class UnitUserVehicleController {
   constructor(private readonly service: UnitUserVehicleService) {}
 
   @Get()
   async getAll(
     @Query() query: VehicleQueryDto,
+    @Request() req: RequestAdminUserModel,
   ): Promise<ResponseModel<UnitUserVehicle[]>> {
     try {
-      const { data, total } = await this.service.getAll(query)
+      const adminUnitIds = req.user.units?.map((u) => u.id) ?? []
+      const { data, total } = await this.service.getAll(query, adminUnitIds)
       return { meta: { total }, data }
     } catch (error) {
       throw new HttpException({ message: error.message }, HttpStatus.BAD_REQUEST)
@@ -61,9 +68,11 @@ export class UnitUserVehicleController {
   @Post()
   async create(
     @Body() dto: VehicleCreateDto,
+    @Request() req: RequestAdminUserModel,
   ): Promise<ResponseModel<UnitUserVehicle>> {
     try {
-      const data = await this.service.create(dto)
+      const adminId = req.user?.id
+      const data = await this.service.create(dto, adminId)
       return { data }
     } catch (error) {
       throw new HttpException({ message: error.message }, HttpStatus.BAD_REQUEST)
@@ -74,9 +83,11 @@ export class UnitUserVehicleController {
   async update(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: VehicleUpdateDto,
+    @Request() req: RequestAdminUserModel,
   ): Promise<ResponseModel<UnitUserVehicle>> {
     try {
-      const data = await this.service.update({ id, update: dto })
+      const adminId = req.user?.id
+      const data = await this.service.update({ id, update: dto, adminId })
       return { data }
     } catch (error) {
       throw new HttpException({ message: error.message }, HttpStatus.BAD_REQUEST)
@@ -86,9 +97,11 @@ export class UnitUserVehicleController {
   @Delete('/:id')
   async delete(
     @Param('id', new ParseUUIDPipe()) id: string,
+    @Request() req: RequestAdminUserModel,
   ): Promise<ResponseModel<string>> {
     try {
-      await this.service.delete(id)
+      const adminId = req.user?.id
+      await this.service.delete(id, adminId)
       return { data: 'succeeded' }
     } catch (error) {
       throw new HttpException({ message: error.message }, HttpStatus.BAD_REQUEST)

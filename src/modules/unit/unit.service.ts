@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Like, Repository } from 'typeorm'
+import { In, Like, Repository } from 'typeorm'
 import { Unit } from './entities/unit.entity'
 import { UnitCreateDto, UnitQueryDto, UnitUpdateDto } from './dto/unit.dto'
 import { paginationUtil } from 'src/utils/pagination'
@@ -13,10 +13,13 @@ export class UnitService {
     private readonly unitRepository: Repository<Unit>,
   ) {}
 
-  async createUnit(dto: UnitCreateDto): Promise<Unit> {
+  async createUnit(dto: UnitCreateDto, adminId?: string): Promise<Unit> {
     this.logger.log('create-unit')
     try {
-      const entity = this.unitRepository.create(dto)
+      const entity = this.unitRepository.create({
+        ...dto,
+        ...(adminId && { createdBy: { id: adminId }, updatedBy: { id: adminId } }),
+      })
       return await this.unitRepository.save(entity)
     } catch (error) {
       this.logger.debug(error)
@@ -26,6 +29,7 @@ export class UnitService {
 
   async getAllUnits(
     query: UnitQueryDto,
+    adminUnitIds: string[] = [],
   ): Promise<{ data: Unit[]; total: number }> {
     this.logger.log('get-all-units')
     try {
@@ -34,6 +38,7 @@ export class UnitService {
         where: {
           isDeleted: false,
           ...(query.searchText && { name: Like(`%${query.searchText}%`) }),
+          ...(adminUnitIds.length > 0 && { id: In(adminUnitIds) }),
         },
         relations: ['unitUsers'],
         order: { createdAt: 'DESC' },
@@ -63,23 +68,32 @@ export class UnitService {
   async updateUnit({
     id,
     update,
+    adminId,
   }: {
     id: string
     update: UnitUpdateDto
+    adminId?: string
   }): Promise<Unit> {
     this.logger.log('update-unit')
     try {
-      return await this.unitRepository.save({ id, ...update })
+      return await this.unitRepository.save({
+        id,
+        ...update,
+        ...(adminId && { updatedBy: { id: adminId } }),
+      })
     } catch (error) {
       this.logger.debug(error)
       throw new Error(error)
     }
   }
 
-  async deleteUnit(id: string): Promise<boolean> {
+  async deleteUnit(id: string, adminId?: string): Promise<boolean> {
     this.logger.log('delete-unit')
     try {
-      await this.unitRepository.update(id, { isDeleted: true })
+      await this.unitRepository.update(id, {
+        isDeleted: true,
+        ...(adminId && { updatedBy: { id: adminId } }),
+      })
       return true
     } catch (error) {
       this.logger.debug(error)

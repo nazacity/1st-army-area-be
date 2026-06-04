@@ -9,6 +9,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm'
 import { Building } from 'src/modules/building/entities/building.entity'
+import { Admin } from 'src/modules/admin/entities/admin.entity'
 import { NotUnitUser } from 'src/modules/not-unit-user/entities/not-unit-user.entity'
 import { Unit } from 'src/modules/unit/entities/unit.entity'
 import { UnitUserVehicle } from 'src/modules/unit-user-vehicle/entities/unit-user-vehicle.entity'
@@ -102,6 +103,14 @@ export class UnitUser extends GlobalEntity {
 
   @Column({ type: 'text', default: '' })
   position: string
+
+  @ManyToOne(() => Admin, { nullable: true })
+  @JoinColumn({ name: 'createdBy' })
+  createdBy: Admin
+
+  @ManyToOne(() => Admin, { nullable: true })
+  @JoinColumn({ name: 'updatedBy' })
+  updatedBy: Admin
 
   @OneToMany(() => NotUnitUser, (notUnitUser) => notUnitUser.unitUser)
   relationNotUnitUser: NotUnitUser[]

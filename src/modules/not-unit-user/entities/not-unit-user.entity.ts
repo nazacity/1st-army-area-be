@@ -2,12 +2,14 @@ import { GlobalEntity } from 'src/utils/global-entity'
 import {
   Column,
   Entity,
+  JoinColumn,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm'
 import { UnitUser } from 'src/modules/unit-user/entities/unit-user.entity'
 import { Building } from 'src/modules/building/entities/building.entity'
+import { Admin } from 'src/modules/admin/entities/admin.entity'
 import { NotUnitUserDocument } from 'src/modules/not-unit-user-document/entities/not-unit-user-document.entity'
 
 export enum NotUnitUserGender {
@@ -83,4 +85,12 @@ export class NotUnitUser extends GlobalEntity {
 
   @OneToMany(() => NotUnitUserDocument, (doc) => doc.notUnitUser)
   documents: NotUnitUserDocument[]
+
+  @ManyToOne(() => Admin, { nullable: true })
+  @JoinColumn({ name: 'createdBy' })
+  createdBy: Admin
+
+  @ManyToOne(() => Admin, { nullable: true })
+  @JoinColumn({ name: 'updatedBy' })
+  updatedBy: Admin
 }

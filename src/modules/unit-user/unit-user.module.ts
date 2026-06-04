@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { UnitUser } from './entities/unit-user.entity'
+import { UnitUserDocument } from '../unit-user-document/entities/unit-user-document.entity'
 import { UnitUserService } from './unit-user.service'
 import { UnitUserController } from './unit-user.controller'
 import { BuildingModule } from '../building/building.module'
@@ -9,7 +10,7 @@ import { UnitModule } from '../unit/unit.module'
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([UnitUser]),
+    TypeOrmModule.forFeature([UnitUser, UnitUserDocument]),
     BuildingModule,
     NotUnitUserModule,
     UnitModule,

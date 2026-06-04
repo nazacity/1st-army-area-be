@@ -10,9 +10,13 @@ import {
   Patch,
   Post,
   Query,
+  Request,
+  UseGuards,
 } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { ResponseModel } from 'src/model/response.model'
+import { RequestAdminUserModel } from 'src/model/request.model'
+import { AdminJwtAuthGuard } from 'src/modules/auth/guard/admin-auth.guard'
 import { NotUnitUser } from './entities/not-unit-user.entity'
 import { NotUnitUserService } from './not-unit-user.service'
 import {
@@ -24,15 +28,18 @@ import {
 
 @ApiTags('Not Unit User')
 @Controller('not-unit-user')
+@UseGuards(AdminJwtAuthGuard)
 export class NotUnitUserController {
   constructor(private readonly notUnitUserService: NotUnitUserService) {}
 
   @Get()
   async getAll(
     @Query() query: NotUnitUserQueryDto,
+    @Request() req: RequestAdminUserModel,
   ): Promise<ResponseModel<NotUnitUser[]>> {
     try {
-      const { data, total } = await this.notUnitUserService.getAllNotUnitUsers(query)
+      const adminUnitIds = req.user.units?.map((u) => u.id) ?? []
+      const { data, total } = await this.notUnitUserService.getAllNotUnitUsers(query, adminUnitIds)
       return { meta: { total }, data }
     } catch (error) {
       throw new HttpException({ message: error.message }, HttpStatus.BAD_REQUEST)
@@ -66,9 +73,11 @@ export class NotUnitUserController {
   @Post()
   async create(
     @Body() dto: NotUnitUserCreateDto,
+    @Request() req: RequestAdminUserModel,
   ): Promise<ResponseModel<NotUnitUser>> {
     try {
-      const data = await this.notUnitUserService.createNotUnitUser(dto)
+      const adminId = req.user?.id
+      const data = await this.notUnitUserService.createNotUnitUser(dto, adminId)
       return { data }
     } catch (error) {
       throw new HttpException({ message: error.message }, HttpStatus.BAD_REQUEST)
@@ -79,11 +88,14 @@ export class NotUnitUserController {
   async update(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: NotUnitUserUpdateDto,
+    @Request() req: RequestAdminUserModel,
   ): Promise<ResponseModel<NotUnitUser>> {
     try {
+      const adminId = req.user?.id
       const data = await this.notUnitUserService.updateNotUnitUser({
         id,
         update: dto,
+        adminId,
       })
       return { data }
     } catch (error) {
@@ -94,9 +106,11 @@ export class NotUnitUserController {
   @Delete('/:id')
   async delete(
     @Param('id', new ParseUUIDPipe()) id: string,
+    @Request() req: RequestAdminUserModel,
   ): Promise<ResponseModel<string>> {
     try {
-      await this.notUnitUserService.deleteNotUnitUser(id)
+      const adminId = req.user?.id
+      await this.notUnitUserService.deleteNotUnitUser(id, adminId)
       return { data: 'succeeded' }
     } catch (error) {
       throw new HttpException({ message: error.message }, HttpStatus.BAD_REQUEST)
