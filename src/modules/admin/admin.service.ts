@@ -180,6 +180,7 @@ export class AdminService {
         username: username,
         isDeleted: false,
       },
+      relations: ['units'],
     })
     return Admin
   }
