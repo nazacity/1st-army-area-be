@@ -81,6 +81,21 @@ export class UnitPublicController {
 
   // ── Unit User ──────────────────────────────────────────
 
+  @Get('unit-user/:id')
+  async getUnitUserById(
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ): Promise<ResponseModel<UnitUser>> {
+    try {
+      const data = await this.unitUserService.getUnitUserById(id)
+      return { data }
+    } catch (error) {
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+  }
+
   @Get('unit-user/id-card')
   async getUnitUserByIdCard(
     @Query() query: IDCardUnitUserQueryDto,
