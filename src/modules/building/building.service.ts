@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { Like, Repository } from 'typeorm'
 import { Building, BuildingType } from './entities/building.entity'
 import { BuildingNo } from './entities/building-no.entity'
-import { BuildingCreateDto, BuildingQueryDto, BuildingUpdateDto, AutoCreateBuildingDto } from './dto/building.dto'
+import { BuildingCreateDto, BuildingQueryDto, BuildingQueryByPublicDto, BuildingUpdateDto, AutoCreateBuildingDto } from './dto/building.dto'
 import { paginationUtil } from 'src/utils/pagination'
 import { Unit } from 'src/modules/unit/entities/unit.entity'
 
@@ -62,6 +62,27 @@ export class BuildingService {
         order: { floor: 'ASC', no: 'ASC' },
         take,
         skip,
+      })
+
+      return { data, total }
+    } catch (error) {
+      this.logger.debug(error)
+      throw new Error(error)
+    }
+  }
+
+  async getAllBuildingsByPublic(
+    query: BuildingQueryByPublicDto,
+  ): Promise<{ data: Building[]; total: number }> {
+    this.logger.log('get-all-buildings-by-public')
+    try {
+      const [data, total] = await this.buildingRepository.findAndCount({
+        where: {
+          isDeleted: false,
+          ...(query.buildingNoId && { buildingNo: { id: query.buildingNoId } }),
+        },
+        relations: ['buildingNo', 'relationNotUnitUser', 'unitUser', 'unit'],
+        order: { floor: 'ASC', no: 'ASC' },
       })
 
       return { data, total }

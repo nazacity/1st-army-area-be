@@ -94,6 +94,13 @@ export class BuildingQueryDto extends PaginationDto {
   buildingNoId?: string
 }
 
+export class BuildingQueryByPublicDto {
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsUUID()
+  buildingNoId?: string
+}
+
 export class AutoCreateBuildingDto {
   @ApiProperty()
   @IsNotEmpty()

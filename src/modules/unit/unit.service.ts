@@ -52,6 +52,21 @@ export class UnitService {
     }
   }
 
+  async getAllUnitsByPublic(): Promise<{ data: Unit[]; total: number }> {
+    this.logger.log('get-all-units-by-public')
+    try {
+      const [data, total] = await this.unitRepository.findAndCount({
+        where: { isDeleted: false },
+        relations: ['unitUsers'],
+        order: { createdAt: 'DESC' },
+      })
+      return { data, total }
+    } catch (error) {
+      this.logger.debug(error)
+      throw new Error(error)
+    }
+  }
+
   async getUnitById(id: string): Promise<Unit> {
     this.logger.log('get-unit-by-id')
     try {

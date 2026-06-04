@@ -12,6 +12,11 @@ import {
 } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { ResponseModel } from 'src/model/response.model'
+import { Unit } from '../unit/entities/unit.entity'
+import { UnitService } from '../unit/unit.service'
+import { Building } from '../building/entities/building.entity'
+import { BuildingService } from '../building/building.service'
+import { BuildingQueryByPublicDto } from '../building/dto/building.dto'
 import { UnitUser } from '../unit-user/entities/unit-user.entity'
 import { UnitUserService } from '../unit-user/unit-user.service'
 import { NotUnitUser } from '../not-unit-user/entities/not-unit-user.entity'
@@ -38,10 +43,41 @@ import {
 @Controller('unit-public')
 export class UnitPublicController {
   constructor(
+    private readonly unitService: UnitService,
+    private readonly buildingService: BuildingService,
     private readonly unitUserService: UnitUserService,
     private readonly notUnitUserService: NotUnitUserService,
     private readonly vehicleService: UnitUserVehicleService,
   ) {}
+
+  // ── Unit ───────────────────────────────────────────────
+
+  @Get()
+  async getAllUnits(): Promise<ResponseModel<Unit[]>> {
+    try {
+      const { data, total } = await this.unitService.getAllUnitsByPublic()
+      return { meta: { total }, data }
+    } catch (error) {
+      throw new HttpException({ message: error.message }, HttpStatus.BAD_REQUEST)
+    }
+  }
+
+  // ── Building ───────────────────────────────────────────
+
+  @Get('building')
+  async getAllBuildingsByPublic(
+    @Query() query: BuildingQueryByPublicDto,
+  ): Promise<ResponseModel<Building[]>> {
+    try {
+      const { data, total } = await this.buildingService.getAllBuildingsByPublic(query)
+      return { meta: { total }, data }
+    } catch (error) {
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+  }
 
   // ── Unit User ──────────────────────────────────────────
 
