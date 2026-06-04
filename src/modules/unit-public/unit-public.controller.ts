@@ -58,7 +58,10 @@ export class UnitPublicController {
       const { data, total } = await this.unitService.getAllUnitsByPublic()
       return { meta: { total }, data }
     } catch (error) {
-      throw new HttpException({ message: error.message }, HttpStatus.BAD_REQUEST)
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      )
     }
   }
 
@@ -69,7 +72,8 @@ export class UnitPublicController {
     @Query() query: BuildingQueryByPublicDto,
   ): Promise<ResponseModel<Building[]>> {
     try {
-      const { data, total } = await this.buildingService.getAllBuildingsByPublic(query)
+      const { data, total } =
+        await this.buildingService.getAllBuildingsByPublic(query)
       return { meta: { total }, data }
     } catch (error) {
       throw new HttpException(
@@ -81,12 +85,12 @@ export class UnitPublicController {
 
   // ── Unit User ──────────────────────────────────────────
 
-  @Get('unit-user/:id')
-  async getUnitUserById(
-    @Param('id', new ParseUUIDPipe()) id: string,
+  @Get('unit-user/id-card')
+  async getUnitUserByIdCard(
+    @Query() query: IDCardUnitUserQueryDto,
   ): Promise<ResponseModel<UnitUser>> {
     try {
-      const data = await this.unitUserService.getUnitUserById(id)
+      const data = await this.unitUserService.getUnitUserByIdCard(query)
       return { data }
     } catch (error) {
       throw new HttpException(
@@ -96,12 +100,12 @@ export class UnitPublicController {
     }
   }
 
-  @Get('unit-user/id-card')
-  async getUnitUserByIdCard(
-    @Query() query: IDCardUnitUserQueryDto,
+  @Get('unit-user/:id')
+  async getUnitUserById(
+    @Param('id', new ParseUUIDPipe()) id: string,
   ): Promise<ResponseModel<UnitUser>> {
     try {
-      const data = await this.unitUserService.getUnitUserByIdCard(query)
+      const data = await this.unitUserService.getUnitUserById(id)
       return { data }
     } catch (error) {
       throw new HttpException(
@@ -132,7 +136,10 @@ export class UnitPublicController {
     @Body() dto: UnitUserUpdateDto,
   ): Promise<ResponseModel<UnitUser>> {
     try {
-      const data = await this.unitUserService.updateUnitUser({ id, update: dto })
+      const data = await this.unitUserService.updateUnitUser({
+        id,
+        update: dto,
+      })
       return { data }
     } catch (error) {
       throw new HttpException(
@@ -144,21 +151,6 @@ export class UnitPublicController {
 
   // ── Not Unit User ──────────────────────────────────────
 
-  @Get('not-unit-user/:id')
-  async getNotUnitUserById(
-    @Param('id', new ParseUUIDPipe()) id: string,
-  ): Promise<ResponseModel<NotUnitUser>> {
-    try {
-      const data = await this.notUnitUserService.getNotUnitUserById(id)
-      return { data }
-    } catch (error) {
-      throw new HttpException(
-        { message: error.message },
-        HttpStatus.BAD_REQUEST,
-      )
-    }
-  }
-
   @Get('not-unit-user/lookup')
   async lookupNotUnitUser(
     @Query() query: NotUnitUserLookupDto,
@@ -168,6 +160,21 @@ export class UnitPublicController {
         query.idCardNo,
         query.unitUserIdCard,
       )
+      return { data }
+    } catch (error) {
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+  }
+
+  @Get('not-unit-user/:id')
+  async getNotUnitUserById(
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ): Promise<ResponseModel<NotUnitUser>> {
+    try {
+      const data = await this.notUnitUserService.getNotUnitUserById(id)
       return { data }
     } catch (error) {
       throw new HttpException(
@@ -198,7 +205,10 @@ export class UnitPublicController {
     @Body() dto: NotUnitUserUpdateDto,
   ): Promise<ResponseModel<NotUnitUser>> {
     try {
-      const data = await this.notUnitUserService.updateNotUnitUser({ id, update: dto })
+      const data = await this.notUnitUserService.updateNotUnitUser({
+        id,
+        update: dto,
+      })
       return { data }
     } catch (error) {
       throw new HttpException(
@@ -210,21 +220,6 @@ export class UnitPublicController {
 
   // ── Unit User Vehicle ──────────────────────────────────
 
-  @Get('vehicle/:id')
-  async getVehicleById(
-    @Param('id', new ParseUUIDPipe()) id: string,
-  ): Promise<ResponseModel<UnitUserVehicle>> {
-    try {
-      const data = await this.vehicleService.getById(id)
-      return { data }
-    } catch (error) {
-      throw new HttpException(
-        { message: error.message },
-        HttpStatus.BAD_REQUEST,
-      )
-    }
-  }
-
   @Get('vehicle/lookup')
   async lookupVehicle(
     @Query() query: VehicleLookupDto,
@@ -234,6 +229,21 @@ export class UnitPublicController {
         query.licensePlate,
         query.idCardNo,
       )
+      return { data }
+    } catch (error) {
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+  }
+
+  @Get('vehicle/:id')
+  async getVehicleById(
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ): Promise<ResponseModel<UnitUserVehicle>> {
+    try {
+      const data = await this.vehicleService.getById(id)
       return { data }
     } catch (error) {
       throw new HttpException(
