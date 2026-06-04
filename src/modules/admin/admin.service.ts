@@ -26,6 +26,7 @@ export class AdminService {
         order: {
           createdAt: 'DESC',
         },
+        relations: ['units'],
       })
 
       return { admins, total }
@@ -35,14 +36,15 @@ export class AdminService {
     }
   }
 
-  async getAdminById(clinicId: string): Promise<Admin> {
+  async getAdminById(id: string): Promise<Admin> {
     this.logger.log('get-admin-by-id')
     try {
       const clinic = await this.adminRepository.findOne({
         where: {
-          id: clinicId,
+          id,
           isDeleted: false,
         },
+        relations: ['units'],
       })
 
       return clinic
