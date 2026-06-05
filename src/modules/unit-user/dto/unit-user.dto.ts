@@ -172,6 +172,13 @@ export class UnitUserUpdateDto {
   documents?: UnitUserDocumentCreateDto[]
 }
 
+export class UnitUserQueryByPublicDto extends PaginationDto {
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  searchText?: string
+}
+
 export class UnitUserQueryDto extends PaginationDto {
   @ApiProperty({ required: false, enum: UnitUserStatus })
   @IsOptional()
