@@ -26,6 +26,7 @@ import { UnitUserVehicleService } from '../unit-user-vehicle/unit-user-vehicle.s
 import {
   IDCardUnitUserQueryDto,
   UnitUserCreateDto,
+  UnitUserQueryByPublicDto,
   UnitUserUpdateDto,
 } from '../unit-user/dto/unit-user.dto'
 import {
@@ -84,6 +85,22 @@ export class UnitPublicController {
   }
 
   // ── Unit User ──────────────────────────────────────────
+
+  @Get('unit-user')
+  async getAllUnitUsersByPublic(
+    @Query() query: UnitUserQueryByPublicDto,
+  ): Promise<ResponseModel<UnitUser[]>> {
+    try {
+      const { data, total } =
+        await this.unitUserService.getAllUnitUsers(query)
+      return { meta: { total }, data }
+    } catch (error) {
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+  }
 
   @Get('unit-user/id-card')
   async getUnitUserByIdCard(
