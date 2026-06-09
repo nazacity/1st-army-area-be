@@ -99,6 +99,11 @@ export class BuildingQueryByPublicDto {
   @IsOptional()
   @IsUUID()
   buildingNoId?: string
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  searchText?: string
 }
 
 export class AutoCreateBuildingDto {

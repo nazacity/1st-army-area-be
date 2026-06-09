@@ -1,9 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Like, Repository } from 'typeorm'
+import { Like, ILike, Repository } from 'typeorm'
 import { Building, BuildingType } from './entities/building.entity'
 import { BuildingNo } from './entities/building-no.entity'
-import { BuildingCreateDto, BuildingQueryDto, BuildingQueryByPublicDto, BuildingUpdateDto, AutoCreateBuildingDto } from './dto/building.dto'
+import {
+  BuildingCreateDto,
+  BuildingQueryDto,
+  BuildingQueryByPublicDto,
+  BuildingUpdateDto,
+  AutoCreateBuildingDto,
+} from './dto/building.dto'
 import { paginationUtil } from 'src/utils/pagination'
 import { Unit } from 'src/modules/unit/entities/unit.entity'
 
@@ -25,7 +31,9 @@ export class BuildingService {
       const { unitId, buildingNoId, ...rest } = dto
       const entity = this.buildingRepository.create(rest)
       if (buildingNoId) {
-        entity.buildingNo = await this.buildingNoRepository.findOneBy({ id: buildingNoId })
+        entity.buildingNo = await this.buildingNoRepository.findOneBy({
+          id: buildingNoId,
+        })
       }
       if (unitId) {
         entity.unit = await this.unitRepository.findOneBy({ id: unitId })
@@ -55,7 +63,8 @@ export class BuildingService {
               buildNo: Like(`%${query.searchText}%`),
             },
           }),
-          ...(!query.searchText && query.buildingNoId && { buildingNo: { id: query.buildingNoId } }),
+          ...(!query.searchText &&
+            query.buildingNoId && { buildingNo: { id: query.buildingNoId } }),
           ...(query.unitId && { unit: { id: query.unitId } }),
         },
         relations: ['buildingNo', 'relationNotUnitUser', 'unitUser', 'unit'],
@@ -76,11 +85,26 @@ export class BuildingService {
   ): Promise<{ data: Building[]; total: number }> {
     this.logger.log('get-all-buildings-by-public')
     try {
-      const [data, total] = await this.buildingRepository.findAndCount({
-        where: {
+      const conditions = []
+
+      if (query.buildingNoId) {
+        conditions.push({
           isDeleted: false,
-          ...(query.buildingNoId && { buildingNo: { id: query.buildingNoId } }),
-        },
+          unitUser: { id: null },
+          buildingNo: { id: query.buildingNoId },
+        })
+      }
+
+      if (query.searchText) {
+        conditions.push({
+          isDeleted: false,
+          unitUser: { id: null },
+          buildingNo: { buildNo: ILike(`%${query.searchText}%`) },
+        })
+      }
+
+      const [data, total] = await this.buildingRepository.findAndCount({
+        where: conditions,
         relations: ['buildingNo', 'relationNotUnitUser', 'unitUser', 'unit'],
         order: { floor: 'ASC', no: 'ASC' },
       })
@@ -117,7 +141,9 @@ export class BuildingService {
       const { unitId, buildingNoId, ...rest } = update
       const entity: any = { id, ...rest }
       if (buildingNoId) {
-        entity.buildingNo = await this.buildingNoRepository.findOneBy({ id: buildingNoId })
+        entity.buildingNo = await this.buildingNoRepository.findOneBy({
+          id: buildingNoId,
+        })
       }
       if (unitId) {
         entity.unit = await this.unitRepository.findOneBy({ id: unitId })
@@ -140,7 +166,11 @@ export class BuildingService {
     }
   }
 
-  async autoCreateBuildings(dto: AutoCreateBuildingDto): Promise<{ buildingNo: BuildingNo; buildings: Building[]; skipped: number }> {
+  async autoCreateBuildings(dto: AutoCreateBuildingDto): Promise<{
+    buildingNo: BuildingNo
+    buildings: Building[]
+    skipped: number
+  }> {
     this.logger.log('auto-create-buildings')
     try {
       const { buildNo, floorCount, roomCount, type, unitId } = dto
@@ -181,9 +211,10 @@ export class BuildingService {
         }
       }
 
-      const savedBuildings = buildings.length > 0
-        ? await this.buildingRepository.save(buildings)
-        : []
+      const savedBuildings =
+        buildings.length > 0
+          ? await this.buildingRepository.save(buildings)
+          : []
 
       return { buildingNo: savedBuildingNo, buildings: savedBuildings, skipped }
     } catch (error) {
