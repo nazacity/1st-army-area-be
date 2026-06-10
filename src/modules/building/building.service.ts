@@ -62,6 +62,7 @@ export class BuildingService {
               ...(query.buildingNoId && { id: query.buildingNoId }),
               buildNo: Like(`%${query.searchText}%`),
             },
+            unitUser: false,
           }),
           ...(!query.searchText &&
             query.buildingNoId && { buildingNo: { id: query.buildingNoId } }),
@@ -85,26 +86,24 @@ export class BuildingService {
   ): Promise<{ data: Building[]; total: number }> {
     this.logger.log('get-all-buildings-by-public')
     try {
-      const conditions = []
+      const baseCondition = { isDeleted: false, unitUser: false }
+
+      const conditions: any[] = []
 
       if (query.buildingNoId) {
         conditions.push({
-          isDeleted: false,
-          unitUser: { id: null },
+          ...baseCondition,
           buildingNo: { id: query.buildingNoId },
         })
-      }
-
-      if (query.searchText) {
+      } else if (query.searchText) {
         conditions.push({
-          isDeleted: false,
-          unitUser: { id: null },
+          ...baseCondition,
           buildingNo: { buildNo: ILike(`%${query.searchText}%`) },
         })
       }
 
       const [data, total] = await this.buildingRepository.findAndCount({
-        where: conditions,
+        where: conditions.length > 0 ? conditions : [baseCondition],
         relations: ['buildingNo', 'relationNotUnitUser', 'unitUser', 'unit'],
         order: { floor: 'ASC', no: 'ASC' },
       })
