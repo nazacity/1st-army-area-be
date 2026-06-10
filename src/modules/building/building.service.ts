@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { IsNull, Like, ILike, Repository } from 'typeorm'
+import { Like, ILike, Repository } from 'typeorm'
 import { Building, BuildingType } from './entities/building.entity'
 import { BuildingNo } from './entities/building-no.entity'
 import {
@@ -85,28 +85,30 @@ export class BuildingService {
   ): Promise<{ data: Building[]; total: number }> {
     this.logger.log('get-all-buildings-by-public')
     try {
-      const baseCondition = { isDeleted: false, unitUser: IsNull() }
-
-      const conditions: any[] = []
+      const qb = this.buildingRepository
+        .createQueryBuilder('b')
+        .leftJoinAndSelect('b.buildingNo', 'buildingNo')
+        .leftJoinAndSelect('b.relationNotUnitUser', 'relationNotUnitUser')
+        .leftJoinAndSelect('b.unitUser', 'unitUser')
+        .leftJoinAndSelect('b.unit', 'unit')
+        .where('b.isDeleted = :isDeleted', { isDeleted: false })
+        .andWhere('unitUser.id IS NULL')
 
       if (query.buildingNoId) {
-        conditions.push({
-          ...baseCondition,
-          buildingNo: { id: query.buildingNoId },
-        })
-      } else if (query.searchText) {
-        conditions.push({
-          ...baseCondition,
-          buildingNo: { buildNo: ILike(`%${query.searchText}%`) },
+        qb.andWhere('buildingNo.id = :buildingNoId', {
+          buildingNoId: query.buildingNoId,
         })
       }
 
-      const [data, total] = await this.buildingRepository.findAndCount({
-        where: conditions.length > 0 ? conditions : [baseCondition],
-        relations: ['buildingNo', 'relationNotUnitUser', 'unitUser', 'unit'],
-        order: { floor: 'ASC', no: 'ASC' },
-      })
+      if (query.searchText) {
+        qb.andWhere('buildingNo.buildNo ILIKE :searchText', {
+          searchText: `%${query.searchText}%`,
+        })
+      }
 
+      qb.orderBy('b.floor', 'ASC').addOrderBy('b.no', 'ASC')
+
+      const [data, total] = await qb.getManyAndCount()
       return { data, total }
     } catch (error) {
       this.logger.debug(error)
