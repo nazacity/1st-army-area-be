@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator'
+import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator'
 
 export class AdminCreateDto {
   @ApiProperty()
@@ -31,6 +31,11 @@ export class AdminCreateDto {
   @IsNotEmpty()
   @IsString()
   phoneNumber: string
+
+  @ApiProperty({ type: [String] })
+  @IsNotEmpty()
+  @IsArray()
+  units: string[]
 }
 
 export class AdminUpdateDto {
@@ -58,4 +63,9 @@ export class AdminUpdateDto {
   @IsOptional()
   @IsString()
   password: string
+
+  @ApiProperty({ required: false, type: [String] })
+  @IsOptional()
+  @IsArray()
+  units: string[]
 }

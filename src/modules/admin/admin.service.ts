@@ -1,9 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Crypto } from 'src/utils/crypto'
-import { Repository } from 'typeorm'
+import { In, Repository } from 'typeorm'
 import { AdminCreateDto, AdminUpdateDto } from './dto/admin.dto'
 import { Admin } from './entities/admin.entity'
+import { Unit } from '../unit/entities/unit.entity'
 
 @Injectable()
 export class AdminService {
@@ -79,12 +80,21 @@ export class AdminService {
     this.logger.log('create-admin-by-id')
     try {
       const password = await Crypto.hash(adminCreateDto.password)
-      adminCreateDto.password = password
-      const createdClinic = await this.adminRepository.create(adminCreateDto)
+      const { units: unitIds, ...rest } = adminCreateDto
 
-      const savedClinic = await this.adminRepository.save(createdClinic)
+      const units = await this.adminRepository.manager.find(Unit, {
+        where: { id: In(unitIds) },
+      })
 
-      return savedClinic
+      const createdAdmin = this.adminRepository.create({
+        ...rest,
+        password,
+        units,
+      })
+
+      const savedAdmin = await this.adminRepository.save(createdAdmin)
+
+      return savedAdmin
     } catch (error) {
       this.logger.debug(error)
       throw new Error(error)
@@ -113,9 +123,18 @@ export class AdminService {
         adminUpdateDto.password = await Crypto.hash(adminUpdateDto.password)
       }
 
+      const { units: unitIds, ...rest } = adminUpdateDto
+      let units = admin.units
+      if (unitIds) {
+        units = await this.adminRepository.manager.find(Unit, {
+          where: { id: In(unitIds) },
+        })
+      }
+
       const updatedAdmin = {
         ...admin,
-        ...adminUpdateDto,
+        ...rest,
+        units,
       }
 
       const savedAdmin = await this.adminRepository.save(updatedAdmin)
