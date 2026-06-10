@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Crypto } from 'src/utils/crypto'
-import { In, Repository } from 'typeorm'
-import { AdminCreateDto, AdminUpdateDto } from './dto/admin.dto'
+import { In, Like, Repository } from 'typeorm'
+import { AdminCreateDto, AdminQueryDto, AdminSuperUpdateDto, AdminUpdateDto } from './dto/admin.dto'
 import { Admin } from './entities/admin.entity'
 import { Unit } from '../unit/entities/unit.entity'
 
@@ -14,20 +14,35 @@ export class AdminService {
     private readonly adminRepository: Repository<Admin>,
   ) {}
 
-  async getAdmins(): Promise<{
+  async getAdmins(query?: AdminQueryDto): Promise<{
     admins: Admin[]
     total: number
   }> {
-    this.logger.log('get-clinic-administors')
+    this.logger.log('get-admins')
     try {
+      const where: any = {
+        isDeleted: false,
+      }
+
+      if (query?.unitId) {
+        where.units = { id: query.unitId }
+      }
+
+      if (query?.searchText) {
+        where.firstName = Like(`%${query.searchText}%`)
+      }
+
+      const take = query?.take ? Number(query.take) : 10
+      const page = query?.page ? Number(query.page) : 1
+      const skip = take === -1 ? undefined : (page - 1) * take
+
       const [admins, total] = await this.adminRepository.findAndCount({
-        where: {
-          isDeleted: false,
-        },
+        where,
         order: {
           createdAt: 'DESC',
         },
         relations: ['units'],
+        ...(skip !== undefined && { skip, take }),
       })
 
       return { admins, total }
@@ -106,7 +121,7 @@ export class AdminService {
     adminUpdateDto,
   }: {
     adminId: string
-    adminUpdateDto: AdminUpdateDto
+    adminUpdateDto: AdminUpdateDto | AdminSuperUpdateDto
   }): Promise<Admin> {
     this.logger.log('update-admin-by-id')
     try {
@@ -115,6 +130,7 @@ export class AdminService {
           id: adminId,
           isDeleted: false,
         },
+        relations: ['units'],
       })
 
       if (!admin) throw new Error('Admin is not found')
@@ -123,7 +139,7 @@ export class AdminService {
         adminUpdateDto.password = await Crypto.hash(adminUpdateDto.password)
       }
 
-      const { units: unitIds, ...rest } = adminUpdateDto
+      const { units: unitIds, ...rest } = adminUpdateDto as AdminSuperUpdateDto
       let units = admin.units
       if (unitIds) {
         units = await this.adminRepository.manager.find(Unit, {

@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator'
+import { PaginationDto } from 'src/utils/pagination'
 
 export class AdminCreateDto {
   @ApiProperty()
@@ -63,9 +64,23 @@ export class AdminUpdateDto {
   @IsOptional()
   @IsString()
   password: string
+}
 
+export class AdminSuperUpdateDto extends AdminUpdateDto {
   @ApiProperty({ required: false, type: [String] })
   @IsOptional()
   @IsArray()
   units: string[]
+}
+
+export class AdminQueryDto extends PaginationDto {
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  unitId?: string
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  searchText?: string
 }
