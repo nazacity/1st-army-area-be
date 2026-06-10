@@ -62,11 +62,11 @@ export class BuildingService {
               ...(query.buildingNoId && { id: query.buildingNoId }),
               buildNo: Like(`%${query.searchText}%`),
             },
-            unitUser: false,
           }),
           ...(!query.searchText &&
             query.buildingNoId && { buildingNo: { id: query.buildingNoId } }),
           ...(query.unitId && { unit: { id: query.unitId } }),
+          unitUser: false,
         },
         relations: ['buildingNo', 'relationNotUnitUser', 'unitUser', 'unit'],
         order: { floor: 'ASC', no: 'ASC' },
