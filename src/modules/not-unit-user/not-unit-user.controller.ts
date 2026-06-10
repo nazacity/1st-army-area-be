@@ -13,7 +13,7 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common'
-import { ApiTags } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 import { ResponseModel } from 'src/model/response.model'
 import { RequestAdminUserModel } from 'src/model/request.model'
 import { AdminJwtAuthGuard } from 'src/modules/auth/guard/admin-auth.guard'
@@ -28,6 +28,7 @@ import {
 
 @ApiTags('Not Unit User')
 @Controller('not-unit-user')
+@ApiBearerAuth('Admin Authorization')
 @UseGuards(AdminJwtAuthGuard)
 export class NotUnitUserController {
   constructor(private readonly notUnitUserService: NotUnitUserService) {}
@@ -39,10 +40,16 @@ export class NotUnitUserController {
   ): Promise<ResponseModel<NotUnitUser[]>> {
     try {
       const adminUnitIds = req.user.units?.map((u) => u.id) ?? []
-      const { data, total } = await this.notUnitUserService.getAllNotUnitUsers(query, adminUnitIds)
+      const { data, total } = await this.notUnitUserService.getAllNotUnitUsers(
+        query,
+        adminUnitIds,
+      )
       return { meta: { total }, data }
     } catch (error) {
-      throw new HttpException({ message: error.message }, HttpStatus.BAD_REQUEST)
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      )
     }
   }
 
@@ -51,10 +58,16 @@ export class NotUnitUserController {
     @Query() query: NotUnitUserLookupDto,
   ): Promise<ResponseModel<NotUnitUser[]>> {
     try {
-      const data = await this.notUnitUserService.getByIdCardAndUnitUserIdCard(query.idCardNo, query.unitUserIdCard)
+      const data = await this.notUnitUserService.getByIdCardAndUnitUserIdCard(
+        query.idCardNo,
+        query.unitUserIdCard,
+      )
       return { data }
     } catch (error) {
-      throw new HttpException({ message: error.message }, HttpStatus.BAD_REQUEST)
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      )
     }
   }
 
@@ -66,7 +79,10 @@ export class NotUnitUserController {
       const data = await this.notUnitUserService.getNotUnitUserById(id)
       return { data }
     } catch (error) {
-      throw new HttpException({ message: error.message }, HttpStatus.BAD_REQUEST)
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      )
     }
   }
 
@@ -80,7 +96,10 @@ export class NotUnitUserController {
       const data = await this.notUnitUserService.createNotUnitUser(dto, adminId)
       return { data }
     } catch (error) {
-      throw new HttpException({ message: error.message }, HttpStatus.BAD_REQUEST)
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      )
     }
   }
 
@@ -99,7 +118,10 @@ export class NotUnitUserController {
       })
       return { data }
     } catch (error) {
-      throw new HttpException({ message: error.message }, HttpStatus.BAD_REQUEST)
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      )
     }
   }
 
@@ -113,7 +135,10 @@ export class NotUnitUserController {
       await this.notUnitUserService.deleteNotUnitUser(id, adminId)
       return { data: 'succeeded' }
     } catch (error) {
-      throw new HttpException({ message: error.message }, HttpStatus.BAD_REQUEST)
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      )
     }
   }
 }

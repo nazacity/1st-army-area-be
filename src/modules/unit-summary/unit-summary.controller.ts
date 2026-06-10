@@ -7,7 +7,7 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common'
-import { ApiTags } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 import { ResponseModel } from 'src/model/response.model'
 import { RequestAdminUserModel } from 'src/model/request.model'
 import { AdminJwtAuthGuard } from 'src/modules/auth/guard/admin-auth.guard'
@@ -25,6 +25,7 @@ import { Building } from '../building/entities/building.entity'
 
 @ApiTags('Unit Summary')
 @Controller('unit-summary')
+@ApiBearerAuth('Admin Authorization')
 @UseGuards(AdminJwtAuthGuard)
 export class UnitSummaryController {
   constructor(private readonly unitSummaryService: UnitSummaryService) {}
@@ -99,7 +100,9 @@ export class UnitSummaryController {
   ) {
     try {
       const adminUnitIds = req.user.units?.map((u) => u.id) ?? []
-      return await this.unitSummaryService.getUnitUserElectionLocationSummary(adminUnitIds)
+      return await this.unitSummaryService.getUnitUserElectionLocationSummary(
+        adminUnitIds,
+      )
     } catch (error) {
       throw new HttpException(
         { message: error.message },
@@ -114,7 +117,9 @@ export class UnitSummaryController {
   ) {
     try {
       const adminUnitIds = req.user.units?.map((u) => u.id) ?? []
-      return await this.unitSummaryService.getNotUnitUserElectionLocationSummary(adminUnitIds)
+      return await this.unitSummaryService.getNotUnitUserElectionLocationSummary(
+        adminUnitIds,
+      )
     } catch (error) {
       throw new HttpException(
         { message: error.message },

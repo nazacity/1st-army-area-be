@@ -13,7 +13,7 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common'
-import { ApiTags } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 import { ResponseModel } from 'src/model/response.model'
 import { RequestAdminUserModel } from 'src/model/request.model'
 import { AdminJwtAuthGuard } from 'src/modules/auth/guard/admin-auth.guard'
@@ -28,6 +28,7 @@ import {
 
 @ApiTags('Unit User')
 @Controller('unit-user')
+@ApiBearerAuth('Admin Authorization')
 @UseGuards(AdminJwtAuthGuard)
 export class UnitUserController {
   constructor(private readonly unitUserService: UnitUserService) {}
@@ -39,7 +40,10 @@ export class UnitUserController {
   ): Promise<ResponseModel<UnitUser[]>> {
     try {
       const adminUnitIds = req.user.units?.map((u) => u.id) ?? []
-      const { data, total } = await this.unitUserService.getAllUnitUsers(query, adminUnitIds)
+      const { data, total } = await this.unitUserService.getAllUnitUsers(
+        query,
+        adminUnitIds,
+      )
       return { meta: { total }, data }
     } catch (error) {
       throw new HttpException(
