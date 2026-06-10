@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Like, ILike, Repository } from 'typeorm'
+import { IsNull, Like, ILike, Repository } from 'typeorm'
 import { Building, BuildingType } from './entities/building.entity'
 import { BuildingNo } from './entities/building-no.entity'
 import {
@@ -85,7 +85,7 @@ export class BuildingService {
   ): Promise<{ data: Building[]; total: number }> {
     this.logger.log('get-all-buildings-by-public')
     try {
-      const baseCondition = { isDeleted: false, unitUser: false }
+      const baseCondition = { isDeleted: false, unitUser: IsNull() }
 
       const conditions: any[] = []
 
