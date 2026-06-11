@@ -24,7 +24,7 @@ export class AdminCreateDto {
   lastName: string
 
   @ApiProperty()
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   profileImageUrl: string
 
