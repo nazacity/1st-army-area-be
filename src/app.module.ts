@@ -32,6 +32,7 @@ import { UnitUserVehicleDocumentModule } from './modules/unit-user-vehicle-docum
 import { CavaryR2Module } from './modules/cavary-r2/cavary-r2.module';
 import { UnitSummaryModule } from './modules/unit-summary/unit-summary.module';
 import { UnitPublicModule } from './modules/unit-public/unit-public.module';
+import { VoltraModule } from './modules/voltra/voltra.module';
 
 // Scheduler
 
@@ -99,6 +100,7 @@ import { UnitPublicModule } from './modules/unit-public/unit-public.module';
     CavaryR2Module,
     UnitSummaryModule,
     UnitPublicModule,
+    VoltraModule,
   ],
   providers: [
     {

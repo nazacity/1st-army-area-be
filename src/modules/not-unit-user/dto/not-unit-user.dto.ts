@@ -100,6 +100,11 @@ export class NotUnitUserCreateDto {
   @ApiProperty()
   @IsOptional()
   @IsString()
+  careerOther: string
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
   unitUserId: string
 
   @ApiProperty()
@@ -174,6 +179,11 @@ export class NotUnitUserUpdateDto {
   @IsOptional()
   @IsString()
   career: string
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  careerOther: string
 
   @ApiProperty()
   @IsOptional()

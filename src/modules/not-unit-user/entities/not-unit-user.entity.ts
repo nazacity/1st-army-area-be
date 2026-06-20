@@ -73,6 +73,9 @@ export class NotUnitUser extends GlobalEntity {
   @Column({ type: 'text', default: '' })
   career: string
 
+  @Column({ type: 'text', default: '' })
+  careerOther: string
+
   @ManyToOne(() => UnitUser, (unitUser) => unitUser.relationNotUnitUser, {
     nullable: true,
   })
