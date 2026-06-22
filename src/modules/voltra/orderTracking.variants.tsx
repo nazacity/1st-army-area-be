@@ -20,13 +20,6 @@ type DeliveryStatus =
   | 'delivering'
   | 'completed'
 
-interface StatusConfig {
-  stepIndex: number
-  color: string
-  symbol: string
-  shortLabel: string
-}
-
 const PRIMARY = '#ec6707'
 const PRIMARY_TINT = '#ec670733'
 const BG_WHITE = '#FFFFFF'
@@ -34,43 +27,8 @@ const BORDER = '#E4E4E7'
 const TEXT_DARK = '#1F2937'
 const TEXT_BODY = '#4B5563'
 const TEXT_MUTED = '#9CA3AF'
-const DOT_EMPTY = '#E5E7EB'
 const COMPLETED_COLOR = '#00B900'
 const ISLAND_TEXT = '#F8FAFC'
-const ISLAND_MUTED = '#94A3B8'
-
-const STATUS_CONFIG: Record<DeliveryStatus, StatusConfig> = {
-  confirmed: {
-    stepIndex: 0,
-    color: PRIMARY,
-    symbol: 'doc.text.fill',
-    shortLabel: 'ยืนยัน',
-  },
-  preparing: {
-    stepIndex: 1,
-    color: PRIMARY,
-    symbol: 'flame.fill',
-    shortLabel: 'เตรียม',
-  },
-  waiting: {
-    stepIndex: 2,
-    color: PRIMARY,
-    symbol: 'bag.fill',
-    shortLabel: 'รอจัดส่ง',
-  },
-  delivering: {
-    stepIndex: 3,
-    color: PRIMARY,
-    symbol: 'bicycle',
-    shortLabel: 'จัดส่ง',
-  },
-  completed: {
-    stepIndex: 4,
-    color: COMPLETED_COLOR,
-    symbol: 'checkmark.circle.fill',
-    shortLabel: 'เสร็จ',
-  },
-}
 
 const STATUS_LABEL_TH: Record<DeliveryStatus, string> = {
   confirmed: 'ยืนยันออเดอร์',
@@ -79,14 +37,6 @@ const STATUS_LABEL_TH: Record<DeliveryStatus, string> = {
   delivering: 'กำลังจัดส่ง',
   completed: 'เสร็จสมบูรณ์',
 }
-
-const STATUS_ORDER: DeliveryStatus[] = [
-  'confirmed',
-  'preparing',
-  'waiting',
-  'delivering',
-  'completed',
-]
 
 const statusFromStep = (step: number): DeliveryStatus => {
   if (step >= 5) return 'completed'
