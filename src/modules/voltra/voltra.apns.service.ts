@@ -165,6 +165,37 @@ export class VoltraApnsService {
     return { ok: false, status: result.status, body: result.body }
   }
 
+  async sendLiveActivityEnd(args: {
+    pushToken: string
+    contentState: Record<string, unknown>
+  }): Promise<{ ok: true } | { ok: false; status: number; body: string }> {
+    const jwt = await this.signJwt()
+    const now = Math.floor(Date.now() / 1000)
+    const body = {
+      aps: {
+        timestamp: now,
+        event: 'end',
+        'content-state': args.contentState,
+        'dismissal-date': now,
+      },
+    }
+    const headers = {
+      authorization: `bearer ${jwt}`,
+      'apns-topic': this.topic,
+      'apns-push-type': 'liveactivity',
+      'apns-priority': '10',
+      'content-type': 'application/json',
+    }
+    const result = await this.sendHttp2Post(
+      `/3/device/${args.pushToken}`,
+      headers,
+      body,
+    )
+    if (result.ok) return { ok: true }
+    this.logger.warn(`APNS end failed ${result.status}: ${result.body}`)
+    return { ok: false, status: result.status, body: result.body }
+  }
+
   async sendLiveActivityStart(args: {
     pushToStartToken: string
     contentState: Record<string, unknown>

@@ -117,9 +117,6 @@ export class VoltraController {
   async testStopTracking(
     @Body() dto: StopOrderTrackingDto,
   ): Promise<ResponseModel<unknown>> {
-    if (process.env.VOLTRA_DEV_TEST_ENABLED !== 'true') {
-      return { data: { ok: false, error: 'VOLTRA_DEV_TEST_ENABLED != true' } }
-    }
     const data = await this.voltraService.stopOrderTracking(dto)
     return { data }
   }

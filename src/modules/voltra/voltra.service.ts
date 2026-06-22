@@ -204,6 +204,7 @@ export class VoltraService {
   }
 
   async stopOrderTracking(dto: StopOrderTrackingDto) {
+    this.logger.log(`stopOrderTracking → dto: ${JSON.stringify(dto)}`)
     const tokens = await this.tokens.find({
       where: {
         customerId: dto.customerId,
@@ -211,17 +212,44 @@ export class VoltraService {
         ...(dto.orderId !== undefined ? { orderId: dto.orderId } : {}),
       },
     })
+    this.logger.log(
+      `tokens found: ${tokens.length} — ${JSON.stringify(tokens.map((t) => ({
+        platform: t.platform,
+        type: t.tokenType,
+        tokenPreview: t.token.slice(0, 12) + '...',
+        orderId: t.orderId,
+        isActive: t.isActive,
+      })))}`,
+    )
+
+    if (tokens.length === 0) {
+      this.logger.warn('no active tokens for stop')
+    }
 
     const results: Array<{ platform: string; ok: boolean }> = []
 
     for (const t of tokens) {
+      this.logger.log(`processing token: ${t.platform}/${t.tokenType} (${t.token.slice(0, 12)}...)`)
       if (t.platform === 'ios' && t.tokenType === 'push-to-update') {
-        // End Live Activity via dismissal policy immediate
-        const r = await this.apns.sendLiveActivityUpdate({
+        const endState: IOrderTrackingState = {
+          orderId: dto.orderId ?? 0,
+          statusName: 'เสร็จสมบูรณ์',
+          statusNameEn: 'Completed',
+          timeDeliveryText: '0 นาที',
+          activeStep: 5,
+        }
+        const variants = buildOrderTrackingVariants(endState)
+        const uiJsonData = await renderLiveActivityToString(variants)
+        this.logger.log(`end variants rendered — uiJsonData len: ${uiJsonData.length}`)
+        const contentState = { uiJsonData }
+        this.logger.log(
+          `sending APNS update with dismissal:immediate — content-state keys: ${Object.keys(contentState).join(',')}`,
+        )
+        const r = await this.apns.sendLiveActivityEnd({
           pushToken: t.token,
-          contentState: { ended: true },
-          dismissalPolicy: 'immediate',
+          contentState,
         })
+        this.logger.log(`APNS stop result for token ${t.token.slice(0, 12)}...: ${JSON.stringify(r)}`)
         results.push({ platform: 'ios', ok: r.ok })
       } else if (t.platform === 'android') {
         // Android: send stop payload via FCM data, app's bg task calls stopAndroidOngoingNotification
