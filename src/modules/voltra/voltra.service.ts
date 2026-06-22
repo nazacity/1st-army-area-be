@@ -7,12 +7,17 @@ import { VoltraApnsService } from './voltra.apns.service'
 import { VoltraFcmService } from './voltra.fcm.service'
 import { VoltraDeviceToken } from './entities/voltra-device-token.entity'
 import {
+  DeliveryLiveActivityDataDto,
+  DeliveryStatus,
   OrderTrackingStateDto,
   PushOrderTrackingUpdateDto,
   RegisterVoltraTokenDto,
   StopOrderTrackingDto,
 } from './dto/voltra.dto'
-import { buildOrderTrackingVariants, IOrderTrackingState } from './orderTracking.variants'
+import {
+  buildOrderTrackingVariants,
+  IOrderTrackingState,
+} from './orderTracking.variants'
 
 export const ORDER_TRACKING_LIVE_ACTIVITY_NAME = 'OrderTracking'
 
@@ -55,7 +60,9 @@ export class VoltraService {
       orderId: dto.orderId ?? null,
       isActive: true,
     })
-    await this.tokens.save(created)
+
+    const saved = await this.tokens.save(created)
+
     return { ok: true, id: created.id, updated: false }
   }
 
@@ -66,6 +73,54 @@ export class VoltraService {
     return { ok: true }
   }
 
+  // ==================== Client-side Live Activity Data ====================
+
+  /**
+   * Returns order data shaped for the app's client-side Live Activity.
+   *
+   * Used by GET /api/voltra/order/:orderId — the app fetches this, then calls
+   * startLiveActivity / updateLiveActivity locally. For push-driven updates use
+   * pushOrderTrackingUpdate instead (no app involvement needed beyond token registration).
+   *
+   * TODO: replace mock with real DB lookup:
+   *   1. const order = await this.orders.findOne({ where: { order_id: orderId } })
+   *   2. if (!order || order.customer_id !== customerId) return null
+   *   3. Map order fields → DeliveryLiveActivityDataDto (use deriveActiveStep + activeStepToStatus)
+   */
+  async getOrderForLiveActivity(
+    customerId: string,
+    orderId: number,
+  ): Promise<DeliveryLiveActivityDataDto | null> {
+    if (!customerId || !orderId) return null
+
+    const status: DeliveryStatus = 'confirmed'
+    const statusLabelMap: Record<DeliveryStatus, string> = {
+      confirmed: 'ยืนยันออเดอร์แล้ว',
+      preparing: 'กำลังเตรียมอาหาร',
+      waiting: 'รอคนขับรับ',
+      delivering: 'กำลังจัดส่ง',
+      completed: 'จัดส่งสำเร็จ',
+    }
+
+    return {
+      orderId,
+      status,
+      statusLabel: statusLabelMap[status],
+      locationName: 'KFC - Sukhumvit 22',
+      eta: '15 นาที',
+      restaurantImageUrl:
+        'https://yavuzceliker.github.io/sample-images/image-1021.jpg',
+    }
+  }
+
+  private activeStepToStatus(step: number): DeliveryStatus {
+    if (step >= 5) return 'completed'
+    if (step === 4) return 'delivering'
+    if (step === 3) return 'waiting'
+    if (step === 2) return 'preparing'
+    return 'confirmed'
+  }
+
   // ==================== Order Tracking Push ====================
 
   async pushOrderTrackingUpdate(dto: PushOrderTrackingUpdateDto) {
@@ -74,9 +129,13 @@ export class VoltraService {
       statusName: dto.state.statusName,
       statusNameEn: dto.state.statusNameEn,
       riderName: dto.state.riderName,
+      locationName: dto.state.locationName,
+      restaurantImageUrl: dto.state.restaurantImageUrl,
       timeDeliveryText: dto.state.timeDeliveryText,
       activeStep: dto.state.activeStep,
     }
+
+    console.log('test')
 
     const tokens = await this.tokens.find({
       where: {
@@ -96,14 +155,16 @@ export class VoltraService {
     const iosResults = await Promise.all(
       iosTokens.map(async (t) => {
         const variants = buildOrderTrackingVariants(state)
-        const voltraPayload = await renderLiveActivityToString(variants)
-        const contentState = { ...state, voltraPayload }
+        const contentState = {
+          uiJsonData: await renderLiveActivityToString(variants),
+        }
 
         if (t.tokenType === 'push-to-start') {
           return this.apns.sendLiveActivityStart({
             pushToStartToken: t.token,
             contentState,
             activityName: ORDER_TRACKING_LIVE_ACTIVITY_NAME,
+            deepLinkUrl: `antdelivery://order_tracking/${state.orderId}`,
           })
         }
         return this.apns.sendLiveActivityUpdate({
@@ -175,7 +236,11 @@ export class VoltraService {
 
     // Mark tokens inactive
     await this.tokens.update(
-      { customerId: dto.customerId, isActive: true, ...(dto.orderId !== undefined ? { orderId: dto.orderId } : {}) },
+      {
+        customerId: dto.customerId,
+        isActive: true,
+        ...(dto.orderId !== undefined ? { orderId: dto.orderId } : {}),
+      },
       { isActive: false },
     )
 
@@ -200,7 +265,10 @@ export class VoltraService {
     rider_name?: string
     time_delivery_text: string
   }): OrderTrackingStateDto {
-    const activeStep = this.deriveActiveStep(order.status_name, order.status_name_en)
+    const activeStep = this.deriveActiveStep(
+      order.status_name,
+      order.status_name_en,
+    )
     return {
       orderId: order.order_id,
       statusName: order.status_name,
@@ -214,11 +282,19 @@ export class VoltraService {
   private deriveActiveStep(statusTh?: string, statusEn?: string): number {
     const s = `${statusTh || ''} ${statusEn || ''}`.trim()
     if (!s) return 0
-    if (s.includes('เสร็จสมบูรณ์') || s.includes('Complete') || s.includes('Success')) return 5
+    if (
+      s.includes('เสร็จสมบูรณ์') ||
+      s.includes('Complete') ||
+      s.includes('Success')
+    )
+      return 5
     if (s.includes('จัดส่ง') || s.includes('Deliver')) return 4
-    if (s.includes('รอ') || s.includes('Waiting') || s.includes('Ready')) return 3
-    if (s.includes('เตรียม') || s.includes('Prepare') || s.includes('Cooking')) return 2
-    if (s.includes('ยืนยัน') || s.includes('Confirm') || s.includes('Accept')) return 1
+    if (s.includes('รอ') || s.includes('Waiting') || s.includes('Ready'))
+      return 3
+    if (s.includes('เตรียม') || s.includes('Prepare') || s.includes('Cooking'))
+      return 2
+    if (s.includes('ยืนยัน') || s.includes('Confirm') || s.includes('Accept'))
+      return 1
     return 0
   }
 }

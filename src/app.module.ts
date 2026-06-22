@@ -44,7 +44,7 @@ import { VoltraModule } from './modules/voltra/voltra.module';
       fallbackLanguage: 'en',
       resolvers: [AcceptLanguageResolver],
       loaderOptions: {
-        path: path.join(__dirname, '/i18n/'),
+        path: path.join(__dirname, '../i18n/'),
         watch: true,
       },
     }),

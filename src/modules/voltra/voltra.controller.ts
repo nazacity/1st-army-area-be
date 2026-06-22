@@ -1,9 +1,19 @@
-import { Body, Controller, Get, Headers, Post, UseGuards } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  Param,
+  ParseIntPipe,
+  Post,
+  UseGuards,
+} from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { ResponseModel } from 'src/model/response.model'
 import { AdminJwtAuthGuard } from '../auth/guard/admin-auth.guard'
 import { VoltraService } from './voltra.service'
 import {
+  DeliveryLiveActivityDataDto,
   PushOrderTrackingUpdateDto,
   RegisterVoltraTokenDto,
   StopOrderTrackingDto,
@@ -39,10 +49,11 @@ export class VoltraController {
     return { data: result }
   }
 
-  @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard)
   @Post('/order-tracking/push')
-  @ApiOperation({ summary: 'Push order status update to all devices for a customer (admin/service)' })
+  @ApiOperation({
+    summary:
+      'Push order status update to all devices for a customer (admin/service)',
+  })
   async pushUpdate(
     @Body() dto: PushOrderTrackingUpdateDto,
   ): Promise<ResponseModel<unknown>> {
@@ -50,10 +61,10 @@ export class VoltraController {
     return { data }
   }
 
-  @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard)
   @Post('/order-tracking/stop')
-  @ApiOperation({ summary: 'Stop all Live Activities / ongoing notifs for a customer order' })
+  @ApiOperation({
+    summary: 'Stop all Live Activities / ongoing notifs for a customer order',
+  })
   async stopTracking(
     @Body() dto: StopOrderTrackingDto,
   ): Promise<ResponseModel<unknown>> {
@@ -61,8 +72,58 @@ export class VoltraController {
     return { data }
   }
 
-  @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard)
+  @Get('/order/:orderId')
+  @ApiOperation({
+    summary: 'Get order data for client-side Live Activity (app-called)',
+  })
+  async getOrderForLiveActivity(
+    @Param('orderId', ParseIntPipe) orderId: number,
+    @Headers('x-customer-id') customerId: string,
+  ): Promise<ResponseModel<DeliveryLiveActivityDataDto | null>> {
+    if (!customerId) {
+      return { data: null }
+    }
+    const data = await this.voltraService.getOrderForLiveActivity(
+      customerId,
+      orderId,
+    )
+    return { data }
+  }
+
+  /**
+   * DEV-ONLY test trigger for server-driven push (no auth guard).
+   * Disable in production via VOLTRA_DEV_TEST_ENABLED env flag.
+   * Calls the same VoltraService.pushOrderTrackingUpdate used by real status flows.
+   */
+  @Post('/order-tracking/test-push')
+  @ApiOperation({
+    summary:
+      '[DEV] Trigger server-driven push update to all devices for a customer',
+  })
+  async testPushUpdate(
+    @Body() dto: PushOrderTrackingUpdateDto,
+  ): Promise<ResponseModel<unknown>> {
+    const data = await this.voltraService.pushOrderTrackingUpdate(dto)
+    return { data }
+  }
+
+  /**
+   * DEV-ONLY test trigger for server-driven stop (no auth guard).
+   */
+  @Post('/order-tracking/test-stop')
+  @ApiOperation({
+    summary: '[DEV] Trigger server-driven stop for a customer order',
+  })
+  async testStopTracking(
+    @Body() dto: StopOrderTrackingDto,
+  ): Promise<ResponseModel<unknown>> {
+    if (process.env.VOLTRA_DEV_TEST_ENABLED !== 'true') {
+      return { data: { ok: false, error: 'VOLTRA_DEV_TEST_ENABLED != true' } }
+    }
+    const data = await this.voltraService.stopOrderTracking(dto)
+    return { data }
+  }
+
   @Get('/health')
   @ApiOperation({ summary: 'Voltra service health check' })
   async health(): Promise<ResponseModel<{ ok: boolean; service: string }>> {
