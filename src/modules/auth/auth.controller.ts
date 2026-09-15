@@ -12,9 +12,12 @@ import { ResponseModel } from 'src/model/response.model'
 import { UserService } from '../user/user.service'
 import { AdminService } from '../admin/admin.service'
 import { UserLoginDto } from './dto/user-login.dto'
+import { PersonnelLoginDto } from './dto/personnel-login.dto'
 import { Admin } from '../admin/entities/admin.entity'
 import { AuthTokenModel } from './model/auth-token.model'
 import { User } from '../user/entities/user.entity'
+import { PersonnelService } from '../personnel/personnel.service'
+import { Personnel } from '../personnel/entities/personnel.entity'
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -23,7 +26,47 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly userService: UserService,
     private readonly administorService: AdminService,
+    private readonly personnelService: PersonnelService,
   ) {}
+
+  @Post('/personnel/sign-in')
+  async authenticationPersonnel(
+    @Body() personnelLoginDto: PersonnelLoginDto,
+  ): Promise<
+    ResponseModel<{
+      token: AuthTokenModel
+      user: Partial<Personnel>
+      mustChangePassword: boolean
+    }>
+  > {
+    try {
+      const personnel = await this.personnelService.verifyPersonnel(
+        personnelLoginDto.username,
+        personnelLoginDto.password,
+      )
+
+      const accessToken = await this.authService.getNewToken({
+        id: personnel.id,
+      })
+
+      delete (personnel as any).password
+
+      return {
+        data: {
+          token: accessToken,
+          user: personnel,
+          mustChangePassword: !personnel.isChangePassword,
+        },
+      }
+    } catch (error) {
+      throw new HttpException(
+        {
+          message: error.message,
+        },
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+  }
 
   @Post('/user/sign-in')
   async authenticationClinicAdministor(

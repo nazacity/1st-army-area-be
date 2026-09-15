@@ -24,7 +24,7 @@ import {
   AdminSuperUpdateDto,
   AdminUpdateDto,
 } from './dto/admin.dto'
-import { Admin } from './entities/admin.entity'
+import { Admin, AdminRole } from './entities/admin.entity'
 
 @ApiTags('Admin Services')
 @Controller('admin')
@@ -47,6 +47,13 @@ export class AdminController {
         HttpStatus.BAD_REQUEST,
       )
     }
+  }
+
+  @ApiBearerAuth('Admin Authorization')
+  @UseGuards(AdminJwtAuthGuard)
+  @Get('/roles')
+  async getAdminRoles(): Promise<ResponseModel<string[]>> {
+    return { data: Object.values(AdminRole) }
   }
 
   @ApiBearerAuth('Admin Authorization')

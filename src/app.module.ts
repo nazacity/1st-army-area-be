@@ -33,6 +33,10 @@ import { CavaryR2Module } from './modules/cavary-r2/cavary-r2.module';
 import { UnitSummaryModule } from './modules/unit-summary/unit-summary.module';
 import { UnitPublicModule } from './modules/unit-public/unit-public.module';
 import { VoltraModule } from './modules/voltra/voltra.module';
+import { PersonnelModule } from './modules/personnel/personnel.module';
+import { PersonnelGroupModule } from './modules/personnel-group/personnel-group.module';
+import { RoomModule } from './modules/room/room.module';
+import { PaymentModule } from './modules/payment/payment.module';
 
 // Scheduler
 
@@ -101,6 +105,10 @@ import { VoltraModule } from './modules/voltra/voltra.module';
     UnitSummaryModule,
     UnitPublicModule,
     VoltraModule,
+    PersonnelModule,
+    PersonnelGroupModule,
+    RoomModule,
+    PaymentModule,
   ],
   providers: [
     {
