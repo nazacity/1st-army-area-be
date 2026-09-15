@@ -135,8 +135,6 @@ export class VoltraService {
       activeStep: dto.state.activeStep,
     }
 
-    console.log('test')
-
     const tokens = await this.tokens.find({
       where: {
         customerId: dto.customerId,
@@ -213,13 +211,15 @@ export class VoltraService {
       },
     })
     this.logger.log(
-      `tokens found: ${tokens.length} — ${JSON.stringify(tokens.map((t) => ({
-        platform: t.platform,
-        type: t.tokenType,
-        tokenPreview: t.token.slice(0, 12) + '...',
-        orderId: t.orderId,
-        isActive: t.isActive,
-      })))}`,
+      `tokens found: ${tokens.length} — ${JSON.stringify(
+        tokens.map((t) => ({
+          platform: t.platform,
+          type: t.tokenType,
+          tokenPreview: t.token.slice(0, 12) + '...',
+          orderId: t.orderId,
+          isActive: t.isActive,
+        })),
+      )}`,
     )
 
     if (tokens.length === 0) {
@@ -229,7 +229,9 @@ export class VoltraService {
     const results: Array<{ platform: string; ok: boolean }> = []
 
     for (const t of tokens) {
-      this.logger.log(`processing token: ${t.platform}/${t.tokenType} (${t.token.slice(0, 12)}...)`)
+      this.logger.log(
+        `processing token: ${t.platform}/${t.tokenType} (${t.token.slice(0, 12)}...)`,
+      )
       if (t.platform === 'ios' && t.tokenType === 'push-to-update') {
         const endState: IOrderTrackingState = {
           orderId: dto.orderId ?? 0,
@@ -240,7 +242,9 @@ export class VoltraService {
         }
         const variants = buildOrderTrackingVariants(endState)
         const uiJsonData = await renderLiveActivityToString(variants)
-        this.logger.log(`end variants rendered — uiJsonData len: ${uiJsonData.length}`)
+        this.logger.log(
+          `end variants rendered — uiJsonData len: ${uiJsonData.length}`,
+        )
         const contentState = { uiJsonData }
         this.logger.log(
           `sending APNS update with dismissal:immediate — content-state keys: ${Object.keys(contentState).join(',')}`,
@@ -249,7 +253,9 @@ export class VoltraService {
           pushToken: t.token,
           contentState,
         })
-        this.logger.log(`APNS stop result for token ${t.token.slice(0, 12)}...: ${JSON.stringify(r)}`)
+        this.logger.log(
+          `APNS stop result for token ${t.token.slice(0, 12)}...: ${JSON.stringify(r)}`,
+        )
         results.push({ platform: 'ios', ok: r.ok })
       } else if (t.platform === 'android') {
         // Android: send stop payload via FCM data, app's bg task calls stopAndroidOngoingNotification
