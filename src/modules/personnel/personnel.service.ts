@@ -11,13 +11,31 @@ import {
   UpdatePersonnelDto,
 } from './dto/personnel.dto'
 
+// 'YYYY-MM-DD' → Date เที่ยงวัน Asia/Bangkok (+07:00) กัน timezone เพี้ยนวัน
+export function toNoonBangkokDate(dateOfBirth: string): Date {
+  return new Date(`${dateOfBirth}T12:00:00+07:00`)
+}
+
 export function genInitialPassword(
-  dateOfBirth: string,
+  dateOfBirth: Date | string,
   citizenId: string,
 ): string {
-  // dateOfBirth: ISO YYYY-MM-DD → DDMMYYYY + เลขบัตรประชาชน 13 หลัก
-  const [y, m, d] = dateOfBirth.split('-')
-  return `${d}${m}${y}${citizenId}`
+  // → DDMMYYYY + เลขบัตรประชาชน 13 หลัก
+  let day: string, month: string, year: string
+  if (dateOfBirth instanceof Date) {
+    // en-GB + Asia/Bangkok → 'DD/MM/YYYY'
+    ;[day, month, year] = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Asia/Bangkok',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    })
+      .format(dateOfBirth)
+      .split('/')
+  } else {
+    ;[year, month, day] = dateOfBirth.split('-')
+  }
+  return `${day}${month}${year}${citizenId}`
 }
 
 @Injectable()
@@ -193,6 +211,7 @@ export class PersonnelService {
 
       const personnel = this.personnelRepository.create({
         ...dto,
+        dateOfBirth: toNoonBangkokDate(dto.dateOfBirth),
         weight: dto.weight ? Number(dto.weight) : null,
         height: dto.height ? Number(dto.height) : null,
         password: Crypto.hash(
@@ -226,6 +245,12 @@ export class PersonnelService {
       const updated = await this.personnelRepository.save({
         ...personnel,
         ...dto,
+        dateOfBirth:
+          dto.dateOfBirth !== undefined
+            ? dto.dateOfBirth
+              ? toNoonBangkokDate(dto.dateOfBirth)
+              : null
+            : personnel.dateOfBirth,
         weight:
           dto.weight !== undefined
             ? dto.weight

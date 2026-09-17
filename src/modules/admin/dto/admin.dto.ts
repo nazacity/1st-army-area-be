@@ -1,6 +1,14 @@
-import { ApiProperty } from '@nestjs/swagger'
-import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator'
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import {
+  IsArray,
+  IsBoolean,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator'
 import { PaginationDto } from 'src/utils/pagination'
+import { AdminRole } from '../entities/admin.entity'
 
 export class AdminCreateDto {
   @ApiProperty()
@@ -37,6 +45,11 @@ export class AdminCreateDto {
   @IsNotEmpty()
   @IsArray()
   units: string[]
+
+  @ApiPropertyOptional({ enum: AdminRole })
+  @IsOptional()
+  @IsEnum(AdminRole)
+  role?: AdminRole
 }
 
 export class AdminUpdateDto {
@@ -71,6 +84,16 @@ export class AdminSuperUpdateDto extends AdminUpdateDto {
   @IsOptional()
   @IsArray()
   units: string[]
+
+  @ApiPropertyOptional({ enum: AdminRole })
+  @IsOptional()
+  @IsEnum(AdminRole)
+  role?: AdminRole
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean
 }
 
 export class AdminQueryDto extends PaginationDto {

@@ -29,7 +29,7 @@ export class Admin extends GlobalEntity {
   @Column()
   lastName: string
 
-  @Column()
+  @Column({ nullable: true })
   profileImageUrl: string
 
   @Column()

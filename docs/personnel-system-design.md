@@ -563,6 +563,10 @@ plain password ตั้งต้น = {DDMMYYYY ของวันเกิด}
 `isChangePassword` = false
 ```
 
+> **การเก็บวันเกิด (2026-09-16):** `dateOfBirth` เป็น `timestamptz` เก็บ **เวลา 12:00 Asia/Bangkok** (`toNoonBangkokDate()` / import script เหมือนกัน) — กัน timezone shift ทำวันเดือนปีเพี้ยนตอน FE แปลง `genInitialPassword()` อ่านค่าด้วย `Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Bangkok' })` ได้ DDMMYYYY เสมอ
+
+> **เบอร์โทรศัพท์ (2026-09-16):** เลข 0 นำหน้าหายเมื่อเปิด/บันทึก CSV ใน Excel (numeric coercion) — import ใช้ `normalizePhone()` กันซ้ำ (9 หลักไม่มี 0 → เติม 0) และเมื่อทำ export §6.1 ต้องเขียนเบอร์เป็น text (quote/tab) เสมอ
+
 > แนะนำเพิ่ม: gen ครั้งเดียวตอน import — ไม่ควรมี API ที่คืน plain password กลับมา. ถ้าลืมรหัส ใช้ flow "รีเซ็ตกลับเป็น password ตั้งต้น + isChangePassword=false" แทน
 
 ### 4.2 Login Flow (บังคับเปลี่ยนรหัสครั้งแรก)
@@ -1182,54 +1186,55 @@ Reference: §6.1–6.6
 
 ### Stage 4 — Backend: CSV Import + Seed
 
-- [ ] 4.1 script `scripts/import-personnel.ts` ตามอัลกอริทึม §7.1 (normalize type/rank/room/isSpecialForces + gen password)
-- [ ] 4.2 seed rooms 201–710 + groups 1–9
-- [ ] 4.3 รัน import จริง + ตรวจรายงาน error (บัตรไม่ครบ 13 หลัก, แถวที่ gen password ไม่ได้)
-- [ ] 4.4 ทดสอบ login ด้วย password ตั้งต้น 1 รายการ
+- [x] 4.1 script `scripts/import-personnel.ts` ตามอัลกอริทึม §7.1 (normalize type/rank/room/isSpecialForces + gen password) (2026-09-16 — `npm run import:personnel -- <csv>`; enum ใช้ literal ไทยตรง entity; password คอลัมน์เป็น nullable แล้ว — แถวไม่ครบ import ได้แต่ login ไม่ได้)
+- [x] 4.2 seed rooms 201–710 + groups 1–9 (2026-09-16 — ensureRooms/ensureGroups idempotent ใน script)
+- [x] 4.3 รัน import จริง + ตรวจรายงาน error (บัตรไม่ครบ 13 หลัก, แถวที่ gen password ไม่ได้) (2026-09-16 — 146 สำเร็จ / 7 skip (กรอกฟอร์มซ้ำ) / 6 warn ไม่มี password: 105065, 105122, 105235, 105243, 105245, 105246 — ต้องแอดมินแก้ citizenId/DOB แล้ว reset-password)
+- [x] 4.4 ทดสอบ login ด้วย password ตั้งต้น 1 รายการ (2026-09-16 — 105105 sign-in ผ่าน, mustChangePassword=true)
 
 Reference: §7.1–7.2, §1.2
 
 ### Stage 5 — Frontend: Scaffold + Theme + Layout
 
-- [ ] 5.1 เริ่มจาก scaffold `cgsc105-personnel-fe` (`/Users/nazacity/Desktop/Project/cgsc105/pdx/cgsc105-personnel-fe` — stack ตรง §8.2 แล้ว)
-- [ ] 5.2 theme เขียวทหาร `src/theme/colors.ts` + `theme.ts` (§8.3) + คัดลอก logo → `public/logo.png`
-- [ ] 5.3 `UserLayout` + `UserSidebar` + `AdminLayout` + `AdminSidebar` + `Topbar` (§8.5)
-- [ ] 5.4 service layer (axios + interceptors 2 ฝั่ง) + auth slice (redux-persist)
-- [ ] 5.5 หน้า login 2 ฝั่ง + route guards (mustChangePassword, admin role)
+- [x] 5.1 เริ่มจาก scaffold `cgsc105-personnel-fe` (`/Users/nazacity/Desktop/Project/cgsc105/pdx/cgsc105-personnel-fe` — stack ตรง §8.2 แล้ว) (2026-09-16)
+- [x] 5.2 theme เขียวทหาร `src/theme/colors.ts` + `theme.ts` (§8.3) + คัดลอก logo → `public/logo.png` (2026-09-16 — palette `mode:'dark'` + token `COLORS.military` และ `COLORS.status`)
+- [x] 5.3 `UserLayout` + `UserSidebar` + `AdminLayout` + `AdminSidebar` + `Topbar` (§8.5) (2026-09-16 — ใช้ `SidebarShell` ร่วม + `Topbar` รับ prop `side`, Drawer 260px)
+- [x] 5.4 service layer (axios + interceptors 2 ฝั่ง) + auth slice (redux-persist) (2026-09-16 — `utils/userRequest`/`adminRequest` แนบ token จาก slice คนละอัน + 401 logout; slice `userAuth`/`adminAuth` persist whitelist)
+- [x] 5.5 หน้า login 2 ฝั่ง + route guards (mustChangePassword, admin role) (2026-09-16 — `UserGuard` บังคับ `/change-password`, `AdminGuard` + `utils/permissions.ts` ตรวจ role ตาม §5.1 → 403; build ผ่าน + ทดสอบ render/CORS/API 201 — browser click-through เก็บ Stage 8)
 
 Reference: §8.1–8.5
 
 ### Stage 6 — Frontend: ฝั่งผู้ใช้
 
-- [ ] 6.1 `/change-password` (บังคับครั้งแรก)
-- [ ] 6.2 `/` dashboard ผู้ใช้
-- [ ] 6.3 `/profile` ดู+แก้ field จำกัด + อัปโหลดรูป
-- [ ] 6.4 `/my-payments` ประวัติ + แจ้งชำระ + อัปสลิป
-- [ ] 6.5 `/my-room` ข้อมูลห้อง + ภาพสถานภาพ + เงินห้อง
+- [x] 6.1 `/change-password` (บังคับครั้งแรก) (2026-09-16 — ทำตอน Stage 5.5 แล้ว)
+- [x] 6.2 `/` dashboard ผู้ใช้ (2026-09-17 — การ์ดโปรไฟล์ + chip จำพวก/เหล่า/ฉก. + สถิติเงินรุ่น 4 การ์ด + รายการล่าสุด 5 รายการ)
+- [x] 6.3 `/profile` ดู+แก้ field จำกัด + อัปโหลดรูป (2026-09-17 — ข้อมูลส่วนตัว read-only 16 field + ฟอร์มแก้ phone/email/lineId/address + อัปโหลดรูปผ่าน `POST /r2/profile-image` → `PATCH /personnel/me`)
+- [x] 6.4 `/my-payments` ประวัติ + แจ้งชำระ + อัปสลิป (2026-09-17 — ตาราง + StatusChip + dialog แจ้งชำระ/แก้ไข (pending เท่านั้น) + อัปสลิป `POST /r2/image` + ลบด้วย sweetalert2 confirm)
+- [x] 6.5 `/my-room` ข้อมูลห้อง + ภาพสถานภาพ + เงินห้อง (2026-09-17 — การ์ดห้อง+ผู้พัก, gallery ภาพ+lightbox, ตาราง `/room-payments/my-room`; ไม่มีห้อง → empty state; **แก้ `.env.development` baseURL เพิ่ม `/api`** — ก่อนหน้า FE ยิงพลาด prefix)
+  - ทดสอบ API flow จริง (curl): sign-in 105105 รหัสตั้งต้น → บังคับเปลี่ยนรหัส → `/me` `/rooms/my` `/user-payments/my` → สร้าง payment → admin confirm → ลบ → reset-password กลับรหัสตั้งต้น — ผ่านทั้งหมด; FE build + render ทุกหน้าผ่าน (browser click-through เก็บ Stage 8)
 
 Reference: §8.4 (ฝั่งผู้ใช้), §8.6
 
 ### Stage 7 — Frontend: ฝั่งแอดมิน
 
-- [ ] 7.1 `/admin` dashboard สถิติ
-- [ ] 7.2 `/admin/personnels` ตาราง + filter + CRUD + จัดพวก/ห้อง
-- [ ] 7.3 `/admin/personnels/import` อัปโหลด CSV
-- [ ] 7.4 `/admin/groups`
-- [ ] 7.5 `/admin/rooms` + `/admin/rooms/[id]` (gallery ภาพสถานภาพ + อัปโหลด — role building)
-- [ ] 7.6 `/admin/user-payments` ตรวจสลิป ยืนยัน/ปฏิเสธ
-- [ ] 7.7 `/admin/room-payments` ยืนยัน + สรุปรายห้อง
-- [ ] 7.8 `/admin/admins` (role super/it)
-- [ ] 7.9 ตรวจ AdminSidebar กรองเมนูตาม role ครบทุก role
+- [x] 7.1 `/admin` dashboard สถิติ (2026-09-17 — การ์ดกำลังพล/ห้องว่าง + summary เงินรุ่น/เงินห้อง กรองตาม role: เงินรุ่นเห็นเฉพาะ super/personnel, เงินห้องเห็น super/building)
+- [x] 7.2 `/admin/personnels` ตาราง + filter + CRUD + จัดพวก/ห้อง (2026-09-17 — client-side filter พวก/ห้อง/จำพวก/ฉก./ค้นหา + pagination + dialog สร้าง/แก้ + reset-password + soft delete + export CSV (เบอร์โทรเขียนเป็น text กัน Excel กินเลข 0) — education เห็นแบบ read-only)
+- [x] 7.3 `/admin/personnels/import` อัปโหลด CSV (2026-09-17 — **BE เพิ่ม `POST /personnel/import`** (multipart `file`, role personnel|it) โดยดึง logic จาก script มาเป็น `personnel-import.helper.ts` ใช้ร่วมกับ npm script; FE หน้าอัปโหลด + รายงานผล success/skip/warn/error แยกสี. หมายเหตุ: ไฟล์ CSV ปัจจุบันมี response เพิ่ม 68 แถวจากตอน import ครั้งแรก — รอบนี้เพิ่มอีก 56 คน (รวม 202 คน), ส่วน duplicate ข้ามอัตโนมัติ)
+- [x] 7.4 `/admin/groups` (2026-09-17 — การ์ดพวก 1–9 + จำนวนสมาชิก + รายชื่อ + แก้ชื่อ/หัวหน้าพวก/ลบ (Swal confirm))
+- [x] 7.5 `/admin/rooms` + `/admin/rooms/[id]` (gallery ภาพสถานภาพ + อัปโหลด — role building) (2026-09-17 — หน้า list: filter ชั้น + การ์ดห้องสีตามสถานะ (ว่าง/มีที่/เต็ม); หน้า detail: แก้ capacity/note + จัด/ย้ายผู้พัก + gallery + อัปโหลด/ลบภาพ (super/building) + ตารางเงินห้อง (building))
+- [x] 7.6 `/admin/user-payments` ตรวจสลิป ยืนยัน/ปฏิเสธ (2026-09-17 — summary 4 การ์ด + filter สถานะ + ตาราง + ดูสลิป + ยืนยัน/ปฏิเสธ (Swal กรอกเหตุผล))
+- [x] 7.7 `/admin/room-payments` ยืนยัน + สรุปรายห้อง (2026-09-17 — ตารางสรุปรายห้องจาก `/summary` + filter ห้อง/งวด/สถานะ + บันทึกรายรับ + ยืนยัน/ปฏิเสธ)
+- [x] 7.8 `/admin/admins` (role super/it) (2026-09-17 — **BE ปรับ admin module ตาม §6.4**: AdminRolesGuard (super|it) แทน legacy units-check, DTO เพิ่ม `role`/`isActive`, กันลบตัวเอง (403) + กันลบ super_admin คนสุดท้าย, `profileImageUrl` เป็น nullable; FE ตาราง + dialog สร้าง/แก้ (role dropdown + toggle isActive) + ลบ)
+- [x] 7.9 ตรวจ AdminSidebar กรองเมนูตาม role ครบทุก role (2026-09-17 — `canAccessPath` เพิ่ม education view-only (personnels/groups/rooms); ผล: super=8 เมนู, it=dashboard+import, personnel=7, building=dashboard/rooms/room-payments, education=dashboard+view 3 หน้า; ทดสอบ API 403 จริง: it→confirm-payment 403, building→delete-admin 403, delete-self 403)
 
 Reference: §8.4 (ฝั่งแอดมิน), §5.1, §8.6
 
 ### Stage 8 — ทดสอบ + เก็บงาน
 
-- [ ] 8.1 E2E flow ผู้ใช้: login ครั้งแรก → เปลี่ยนรหัส → แจ้งชำระ → แอดมินยืนยัน
-- [ ] 8.2 E2E ห้อง: หน.อาคารอัปโหลดภาพ → ผู้พักเห็นใน `/my-room`
-- [ ] 8.3 ยืนยัน mapping type กำกวมกับเจ้าภาพข้อมูล (§1.2, §9)
-- [ ] 8.4 ทดสอบ rights: แต่ละ role เข้า path ที่ไม่มีสิทธิ์ → 403
-- [ ] 8.5 เตรียม deploy (Docker/CI ตาม pattern โปรเจ็ค)
+- [x] 8.1 E2E flow ผู้ใช้: login ครั้งแรก → เปลี่ยนรหัส → แจ้งชำระ → แอดมินยืนยัน (2026-09-17 — ผ่านครบทุกขั้น: login ตั้งต้น mustChange=true → 403 ก่อนเปลี่ยนรหัส → change-password 201 → /me 200 → แจ้งชำระ pending → admin confirm approved → เห็นใน my list → cleanup + reset กลับรหัสตั้งต้น)
+- [x] 8.2 E2E ห้อง: หน.อาคารอัปโหลดภาพ → ผู้พักเห็นใน `/my-room` (2026-09-17 — R2 จริง: building admin `POST /r2/image` → `POST /rooms/:id/images` → personnel `GET /rooms/my` เห็นภาพ+caption → ลบภาพสำเร็จ)
+- [ ] 8.3 ยืนยัน mapping type กำกวมกับเจ้าภาพข้อมูล (§1.2, §9) — **เตรียมรายการแล้วที่ `docs/mapping-confirmation.md`** (มิตรเหล่า 7 · สป. 15 · นักบิน 11 · บก.ทท. 7 · ฉก. 5 · พ.ท. 5 · ไม่มีรหัสผ่าน 13) — รอเจ้าภาพข้อมูลยืนยัน ⚠️ 105228 (มิตรเหล่า ราบ) infer เป็น ทบ. โดย default
+- [x] 8.4 ทดสอบ rights: แต่ละ role เข้า path ที่ไม่มีสิทธิ์ → 403 (2026-09-17 — สร้าง admin 4 role (it/personnel/building/education) ยิงตาม matrix: GET /personnel + /personnel-groups ทุก role 200; POST /personnel เฉพาะ personnel; import personnel|it; /user-payments personnel; /room-payments + room images + assign building; /admin it — ผลตรง matrix ทั้งหมด แล้วลบ test admins)
+- [x] 8.5 เตรียม deploy (Docker/CI ตาม pattern โปรเจ็ค) (2026-09-17 — Dockerfile + .gitlab-ci.yml + helm มีอยู่เดิมใช้ได้; ตรวจ `csv-parse`/`bcrypt` อยู่ใน runtime dependencies (สำคัญเพราะ import helper import จาก src แล้ว); `npm run build` ผ่าน; ไม่มี env var ใหม่)
 
 Reference: §5.1, §9
 

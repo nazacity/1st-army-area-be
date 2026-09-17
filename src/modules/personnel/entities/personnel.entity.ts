@@ -29,7 +29,8 @@ export class Personnel extends GlobalEntity {
   @Column({ unique: true })
   username: string
 
-  @Column({ select: false })
+  // nullable: แถวที่ import โดย DOB/บัตรยังไม่ครบ — login ไม่ได้จนกว่าแอดมินจะแก้ + reset password
+  @Column({ select: false, nullable: true })
   password: string
 
   @Column({ default: false })
@@ -38,8 +39,9 @@ export class Personnel extends GlobalEntity {
   @Column({ type: 'varchar', length: 13, unique: true, nullable: true })
   citizenId: string
 
-  @Column({ type: 'date', nullable: true })
-  dateOfBirth: string
+  // เก็บเวลาเที่ยงวัน Asia/Bangkok กัน timezone shift วันเดือนปีเพี้ยนตอน FE แปลง
+  @Column({ type: 'timestamptz', nullable: true })
+  dateOfBirth: Date
 
   @Column({ type: 'enum', enum: PersonnelType })
   type: PersonnelType

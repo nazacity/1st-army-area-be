@@ -10,9 +10,14 @@ import {
   Post,
   Query,
   Request,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common'
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger'
+import { FileInterceptor } from '@nestjs/platform-express'
+import { InjectDataSource } from '@nestjs/typeorm'
+import { DataSource } from 'typeorm'
 import { ResponseModel } from 'src/model/response.model'
 import { RequestPersonnelModel } from 'src/model/request.model'
 import { AdminJwtAuthGuard } from '../auth/guard/admin-auth.guard'
@@ -23,6 +28,10 @@ import { AdminRoles } from 'src/common/decorators/admin-roles.decorator'
 import { AdminRole } from '../admin/entities/admin.entity'
 import { PersonnelService } from './personnel.service'
 import { Personnel } from './entities/personnel.entity'
+import {
+  importPersonnel,
+  ImportReport,
+} from './personnel-import.helper'
 import {
   ChangePasswordDto,
   CreatePersonnelDto,
@@ -35,6 +44,9 @@ import {
 @Controller('personnel')
 export class PersonnelController {
   constructor(private readonly personnelService: PersonnelService) {}
+
+  @InjectDataSource()
+  private readonly dataSource: DataSource
 
   @ApiBearerAuth('Admin Authorization')
   @UseGuards(AdminJwtAuthGuard)
@@ -70,6 +82,34 @@ export class PersonnelController {
       )
 
       return { data: personnel }
+    } catch (error) {
+      throw new HttpException(
+        {
+          message: error.message,
+        },
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+  }
+
+  @ApiBearerAuth('Admin Authorization')
+  @ApiConsumes('multipart/form-data')
+  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
+  @AdminRoles(AdminRole.PERSONNEL, AdminRole.IT)
+  @UseInterceptors(FileInterceptor('file'))
+  @Post('/import')
+  async importPersonnels(
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<ResponseModel<ImportReport>> {
+    try {
+      if (!file) throw new Error('CSV file is required')
+
+      const report = await importPersonnel(
+        this.dataSource,
+        file.buffer.toString('utf-8'),
+      )
+
+      return { data: report }
     } catch (error) {
       throw new HttpException(
         {

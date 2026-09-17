@@ -17,6 +17,8 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 import { RequestAdminUserModel } from 'src/model/request.model'
 import { ResponseModel } from 'src/model/response.model'
 import { AdminJwtAuthGuard } from '../auth/guard/admin-auth.guard'
+import { AdminRolesGuard } from 'src/common/guards/admin-roles.guard'
+import { AdminRoles } from 'src/common/decorators/admin-roles.decorator'
 import { AdminService } from './admin.service'
 import {
   AdminCreateDto,
@@ -57,17 +59,12 @@ export class AdminController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
+  @AdminRoles(AdminRole.SUPER_ADMIN, AdminRole.IT)
   @Get()
   async getAdmins(
     @Query() query: AdminQueryDto,
-    @Request() req: RequestAdminUserModel,
   ): Promise<ResponseModel<Admin[]>> {
-    const isSuperAdmin = req.user.units?.length === 0
-    if (!isSuperAdmin) {
-      throw new ForbiddenException('Only super admin can get all admins')
-    }
-
     try {
       const { admins, total } = await this.adminService.getAdmins(query)
       return { data: admins, meta: { total } }
@@ -82,17 +79,12 @@ export class AdminController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
+  @AdminRoles(AdminRole.SUPER_ADMIN, AdminRole.IT)
   @Post()
   async createAdmin(
     @Body() adminCreateDto: AdminCreateDto,
-    @Request() req: RequestAdminUserModel,
   ): Promise<ResponseModel<Admin>> {
-    const isSuperAdmin = req.user.units?.length === 0
-    if (!isSuperAdmin) {
-      throw new ForbiddenException('Only super admin can create admin')
-    }
-
     try {
       const createdAdmin = await this.adminService.createAdmin(adminCreateDto)
 
@@ -108,18 +100,13 @@ export class AdminController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
+  @AdminRoles(AdminRole.SUPER_ADMIN, AdminRole.IT)
   @Patch('/super/:id')
   async updateAdminBySuperAdmin(
     @Param('id') id: string,
     @Body() adminSuperUpdateDto: AdminSuperUpdateDto,
-    @Request() req: RequestAdminUserModel,
   ): Promise<ResponseModel<Admin>> {
-    const isSuperAdmin = req.user.units?.length === 0
-    if (!isSuperAdmin) {
-      throw new ForbiddenException('Only super admin can update admin with units')
-    }
-
     try {
       const updatedAdmin = await this.adminService.updateAdmin({
         adminId: id,
@@ -138,7 +125,8 @@ export class AdminController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
+  @AdminRoles(AdminRole.SUPER_ADMIN, AdminRole.IT)
   @Patch('/:id')
   async updateAdmin(
     @Param('id') id: string,
@@ -162,15 +150,15 @@ export class AdminController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
+  @AdminRoles(AdminRole.SUPER_ADMIN)
   @Delete('/:id')
   async deleteAdmin(
     @Param('id') id: string,
     @Request() req: RequestAdminUserModel,
   ): Promise<ResponseModel<Admin>> {
-    const isSuperAdmin = req.user.units?.length === 0
-    if (!isSuperAdmin) {
-      throw new ForbiddenException('Only super admin can delete admin')
+    if (req.user.id === id) {
+      throw new ForbiddenException('ไม่สามารถลบบัญชีตัวเองได้')
     }
 
     try {

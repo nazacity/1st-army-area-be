@@ -19,7 +19,8 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "deploy": "git pull && npm run build && pm2 restart army-area-be"
+    "deploy": "git pull && npm run build && pm2 restart army-area-be",
+    "import:personnel": "node --env-file=.env -r ts-node/register -r tsconfig-paths/register scripts/import-personnel.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.946.0",
@@ -42,6 +43,7 @@
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.3",
+    "csv-parse": "^7.0.2",
     "dayjs": "^1.11.19",
     "ejs": "^3.1.10",
     "express-basic-auth": "^1.2.1",
