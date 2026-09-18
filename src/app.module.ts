@@ -37,6 +37,7 @@ import { PersonnelModule } from './modules/personnel/personnel.module';
 import { PersonnelGroupModule } from './modules/personnel-group/personnel-group.module';
 import { RoomModule } from './modules/room/room.module';
 import { PaymentModule } from './modules/payment/payment.module';
+import { Survey2Module } from './modules/survey2/survey2.module';
 
 // Scheduler
 
@@ -109,6 +110,7 @@ import { PaymentModule } from './modules/payment/payment.module';
     PersonnelGroupModule,
     RoomModule,
     PaymentModule,
+    Survey2Module,
   ],
   providers: [
     {
