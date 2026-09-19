@@ -70,6 +70,29 @@ export class PersonnelController {
     }
   }
 
+  // รายชื่อเพื่อนร่วมรุ่น (ผู้ใช้เห็นเท่านั้น — ไม่มี action)
+  @ApiBearerAuth('Personnel Authorization')
+  @UseGuards(PersonnelJwtAuthGuard, PersonnelPasswordChangedGuard)
+  @Get('/my-peers')
+  async getMyPeers(
+    @Query() query: PersonnelQueryDto,
+  ): Promise<ResponseModel<Personnel[]>> {
+    try {
+      const { personnels, total } = await this.personnelService.getPersonnels(
+        query,
+      )
+
+      return { data: personnels, meta: { total } }
+    } catch (error) {
+      throw new HttpException(
+        {
+          message: error.message,
+        },
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+  }
+
   @ApiBearerAuth('Personnel Authorization')
   @UseGuards(PersonnelJwtAuthGuard, PersonnelPasswordChangedGuard)
   @Get('/me')
