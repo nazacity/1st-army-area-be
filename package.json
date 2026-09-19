@@ -19,8 +19,9 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "deploy": "git pull && npm run build && pm2 restart army-area-be",
+    "deploy": "git pull && rm -rf dist tsconfig.build.tsbuildinfo && npm install && npm run build && pm2 restart army-area-be",
     "import:personnel": "node --env-file=.env -r ts-node/register -r tsconfig-paths/register scripts/import-personnel.ts",
+    "upload:profile-images": "node --env-file=.env -r ts-node/register -r tsconfig-paths/register scripts/upload-profile-images.ts",
     "seed:personnel-admin": "node --env-file=.env -r ts-node/register -r tsconfig-paths/register scripts/seed-personnel-admin.ts"
   },
   "dependencies": {

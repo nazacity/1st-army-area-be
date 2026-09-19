@@ -1,6 +1,6 @@
 # NOTIFICATION SYSTEM — กระดิ่งแจ้งเตือนในแอป (ไม่มี push จริง)
 
-> สถานะ: **แผนงาน (รอ implement)** — สร้าง 2026-09-19
+> สถานะ: **เสร็จ + E2E ผ่าน** — สร้าง 2026-09-19
 > ขอบเขต: admin ส่งประกาศถึงกำลังพล (เลือกผู้รับได้: ทั้งหมด / เฉพาะพวก / เฉพาะเหล่า / เฉพาะบุคคล) · user เห็นกระดิ่งบน topbar → popover รายการ → กดเปิด dialog อ่านเนื้อหา
 
 ---
@@ -23,7 +23,7 @@ export class Notification extends GlobalEntity {
 
   @Column() title: string
 
-  @Column({ type: 'ntext' }) message: string      // ntext — ใส่ emoji ได้
+  @Column({ type: 'text' }) message: string      // text — ใส่ emoji ได้
 
   @Column({ type: 'enum', enum: NotificationTargetType })
   targetType: NotificationTargetType
@@ -141,10 +141,10 @@ notifications.target_*     ทั้งหมด/เฉพาะพวก/เฉ
 
 ## 7. Checklist
 
-- [ ] 7.1 BE entities + synchronize
-- [ ] 7.2 BE admin CRUD + fan-out (query target → bulk insert recipients)
-- [ ] 7.3 BE user endpoints (my + read + read-all + unreadCount)
-- [ ] 7.4 FE admin หน้าสร้าง/ตรวจสถิติ
-- [ ] 7.5 FE Topbar bell + popover + dialog + Badge unread (poll 60s)
-- [ ] 7.6 i18n + permissions + sidebar (admin)
-- [ ] 7.7 E2E: ส่งแบบทั้งหมด → user เห็นกระดิ่ง unread → กดอ่าน → unread ลด
+- [x] 7.1 BE entities + synchronize
+- [x] 7.2 BE admin CRUD + fan-out (query target → bulk insert recipients)
+- [x] 7.3 BE user endpoints (my + read + read-all + unreadCount)
+- [x] 7.4 FE admin หน้าสร้าง/ตรวจสถิติ
+- [x] 7.5 FE Topbar bell + popover + dialog + Badge unread (poll 60s)
+- [x] 7.6 i18n + permissions + sidebar (admin)
+- [x] 7.7 E2E ผ่าน: ส่ง all → user เห็น unread 1 → mark read → unread 0; ลบ test data แล้ว (2026-09-19)

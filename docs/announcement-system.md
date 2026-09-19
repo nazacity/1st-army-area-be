@@ -1,7 +1,7 @@
 # ANNOUNCEMENT SYSTEM — ประกาศหน้าหลักผู้ใช้
 
-> สถานะ: **แผนงาน (รอ implement)** — สร้าง 2026-09-19
-> อ้างอิง entity: `legacy/fit/fit-api` → `Sys_Legacy_Nofication` (pin, title, description/sub_description ntext, thumbnail, link, link_type)
+> สถานะ: **เสร็จ + E2E ผ่าน** — สร้าง 2026-09-19
+> อ้างอิง entity: `legacy/fit/fit-api` → `Sys_Legacy_Nofication` (pin, title, description/sub_description text, thumbnail, link, link_type)
 > ต่างจากระบบกระดิ่ง (`notification-system.md`): ประกาศ = ข่าวบนหน้าแรก **ไม่เลือกผู้รับ** (ทุกคนเห็นเท่ากัน) ไม่มีสถานะอ่าน
 
 ---
@@ -12,8 +12,8 @@
 |---|---|---|
 | `pin: number` | `pin: number` (default 0) | ตัวเลขมาก = ขึ้นบนสุด (ปักหมุด) |
 | `title` | `title` | |
-| `description: ntext` | `description: ntext` | เนื้อหาหลัก — **ntext รองรับ emoji** แสดงเว้นบรรทัดได้ |
-| `sub_description: ntext` | `sub_description: ntext` | รายละเอียดรอง (แสดงต่จาก description / อยู่ใน dialog ขยาย) |
+| `description: text` | `description: text` | เนื้อหาหลัก — **text รองรับ emoji** แสดงเว้นบรรทัดได้ |
+| `sub_description: text` | `sub_description: text` | รายละเอียดรอง (แสดงต่จาก description / อยู่ใน dialog ขยาย) |
 | `thumbnail_img_url` | `thumbnailImgUrl` (nullable) | รูปประกอบ (R2) |
 | `link` + `link_type: number` | `linkUrl` + `linkType: enum` | ปุ่ม "อ่านต่อ" |
 | `notification_code` | ❌ ไม่ใช้ | โค้ดธุรกิจ fit — ไม่เกี่ยว |
@@ -35,9 +35,9 @@ export class Announcement extends GlobalEntity {
 
   @Column() title: string
 
-  @Column({ type: 'ntext' }) description: string
+  @Column({ type: 'text' }) description: string
 
-  @Column({ type: 'ntext', nullable: true }) subDescription: string
+  @Column({ type: 'text', nullable: true }) subDescription: string
 
   @Column({ nullable: true }) thumbnailImgUrl: string
 
@@ -52,7 +52,7 @@ export class Announcement extends GlobalEntity {
 }
 ```
 
-> emoji: `ntext` (Unicode) เก็บได้เต็มที่ — FE แสดงด้วย `whiteSpace: 'pre-line'` ให้เว้นบรรทัดตรงตามที่พิมพ์
+> emoji: `text` (Unicode) เก็บได้เต็มที่ — FE แสดงด้วย `whiteSpace: 'pre-line'` ให้เว้นบรรทัดตรงตามที่พิมพ์
 
 ---
 
@@ -114,10 +114,10 @@ export class Announcement extends GlobalEntity {
 
 ## 6. Checklist
 
-- [ ] 6.1 BE entity + synchronize
-- [ ] 6.2 BE admin CRUD + display/pin toggles
-- [ ] 6.3 BE user endpoint (`/announcements/my`)
-- [ ] 6.4 FE admin หน้าจัดการ + dialog สร้าง/แก้ (emoji/pre-line, image, link_type)
-- [ ] 6.5 FE หน้าแรก user — แถบประกาศ (pin บนสุด, BaseImageModal, read_more dialog)
-- [ ] 6.6 i18n + permissions + sidebar (admin)
-- [ ] 6.7 E2E: admin สร้างประกาศ (มี emoji + รูป + ลิงก์) → user เห็นบนหน้าแรกเรียงถูก → กดลิงก์ถูกประเภท
+- [x] 6.1 BE entity + synchronize
+- [x] 6.2 BE admin CRUD + display/pin toggles
+- [x] 6.3 BE user endpoint (`/announcements/my`)
+- [x] 6.4 FE admin หน้าจัดการ + dialog สร้าง/แก้ (emoji/pre-line, image, link_type)
+- [x] 6.5 FE หน้าแรก user — แถบประกาศ (pin บนสุด, BaseImageModal, read_more dialog)
+- [x] 6.6 i18n + permissions + sidebar (admin)
+- [x] 6.7 E2E ผ่าน: สร้าง (emoji 📢 + pin 100 + internal link) → /announcements/my ได้ 1 รายการเรียง pin ถูก → ลบ test data (2026-09-19) · หมายเหตุ: Postgres ใช้ `text` แทน ntext (ntext = SQL Server only)

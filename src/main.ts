@@ -66,6 +66,15 @@ async function main() {
       },
       'Personnel Authorization',
     )
+    .addBearerAuth(
+      {
+        type: 'http',
+        description: '##### Login by Personnel Admin (นทน.105 admin)',
+        scheme: 'Bearer',
+        bearerFormat: 'JWT',
+      },
+      'Personnel Admin Authorization',
+    )
     .build()
   const document = SwaggerModule.createDocument(app, config)
   SwaggerModule.setup('/api/docs', app, document, {

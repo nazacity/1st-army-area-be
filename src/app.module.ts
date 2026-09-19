@@ -39,6 +39,9 @@ import { RoomModule } from './modules/room/room.module';
 import { PaymentModule } from './modules/payment/payment.module';
 import { Survey2Module } from './modules/survey2/survey2.module';
 import { PersonnelAdminModule } from './modules/personnel-admin/personnel-admin.module';
+import { BootstrapModule } from './modules/bootstrap/bootstrap.module';
+import { AnnouncementModule } from './modules/announcement/announcement.module';
+import { NotificationModule } from './modules/notification/notification.module';
 
 // Scheduler
 
@@ -109,6 +112,9 @@ import { PersonnelAdminModule } from './modules/personnel-admin/personnel-admin.
     VoltraModule,
     PersonnelModule,
     PersonnelAdminModule,
+    BootstrapModule,
+    AnnouncementModule,
+    NotificationModule,
     PersonnelGroupModule,
     RoomModule,
     PaymentModule,

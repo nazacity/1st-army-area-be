@@ -85,7 +85,7 @@ export function toNoonBangkokDate(dobIso: string): Date {
 }
 
 // เบอร์โทร: กันเลข 0 หาย (Excel/CSV numeric coercion) — เลข 9 หลักไม่มี 0 นำ → เติม 0
-function normalizePhone(raw: string): string | null {
+export function normalizePhone(raw: string): string | null {
   const digits = clean(raw).replace(/\D/g, '')
   if (!digits) return null
   if (digits.length === 9 && !digits.startsWith('0')) return `0${digits}`
@@ -124,7 +124,7 @@ function normalizeRank(rank: string): string {
 }
 
 // ตัดคำนำหน้าเหล่า + แก้ typo: "เหล่สทหารสารบรรณ" → "สารบรรณ", "เหล่าทหารม้าาาา" → "ม้า" (§7.2)
-function normalizeBranch(raw: string): string {
+export function normalizeBranch(raw: string): string {
   const b = raw
     .trim()
     .replace(/เหล่ส/g, 'เหล่า')
@@ -141,7 +141,7 @@ const clean = (v: string | undefined): string => (v ?? '').trim()
 
 // ---------- Seed (idempotent) ----------
 
-async function ensureGroups(
+export async function ensureGroups(
   dataSource: DataSource,
 ): Promise<Map<string, string>> {
   const repo = dataSource.getRepository(PersonnelsGroup)
@@ -154,7 +154,7 @@ async function ensureGroups(
   return new Map((await repo.find()).map((g) => [g.name, g.id]))
 }
 
-async function ensureRooms(
+export async function ensureRooms(
   dataSource: DataSource,
 ): Promise<Map<string, string>> {
   const repo = dataSource.getRepository(Room)

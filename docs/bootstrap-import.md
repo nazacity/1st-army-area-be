@@ -1,6 +1,6 @@
 # BOOTSTRAP IMPORT API — ยิงผ่าน Swagger ครั้งเดียว จบบน server ใหม่
 
-> สถานะ: **แผนงาน (รอ implement)** — สร้าง 2026-09-19
+> สถานะ: **implemented (BE)** — สร้าง 2026-09-19 · ตรวจ `/bootstrap/status` ผ่าน (hasSuperAdmin จาก JWT super_admin)
 > จุดประสงค์: deploy BE ขึ้น server ใหม่ (เช่น prod) → กดปุ่มเดียวใน Swagger พร้อมไฟล์ CSV → DB พร้อมใช้ทันที (super_admin + พวก + ห้อง + กำลังพลทั้งหมด)
 
 ---
@@ -160,19 +160,45 @@ Swagger กดได้เลย (เลือกไฟล์ → Try it out) �
 
 ## 7. Checklist
 
-- [ ] 7.1 export `ensureGroups`/`ensureRooms` จาก import helper (private → export)
-- [ ] 7.2 `ensureSuperAdmin(username, password)` — idempotent
-- [ ] 7.3 parser รูปแบบ B (`importPersonnelExport`) + ตรวจ format จาก header อัตโนมัติ
-- [ ] 7.4 upsert mode (username ซ้ำ → update รวมพวก/ห้อง) + replace mode (ลบก่อน + ยืนยัน)
-- [ ] 7.5 BootstrapGuard (JWT super_admin หรือ BOOTSTRAP_TOKEN)
-- [ ] 7.6 controller + Swagger docs (multipart, response report)
+- [x] 7.1 export `ensureGroups`/`ensureRooms` จาก import helper (private → export)
+- [x] 7.2 `ensureSuperAdmin(username, password)` — idempotent
+- [x] 7.3 parser รูปแบบ B (`importPersonnelExport`) + ตรวจ format จาก header อัตโนมัติ
+- [x] 7.4 upsert mode (username ซ้ำ → update รวมพวก/ห้อง) + replace mode (ลบก่อน + ยืนยัน)
+- [x] 7.5 BootstrapGuard (JWT super_admin หรือ BOOTSTRAP_TOKEN)
+- [x] 7.6 controller + Swagger docs (multipart, response report)
 - [ ] 7.7 FE export เพิ่มคอลัมน์ วันเกิด/บัตร (แก้ปัญหารหัสผ่าน) — แยกทำฝั่ง FE
 - [ ] 7.8 ทดสอบ E2E: server ใหม่ (DB ว่าง) → ยิง 1 ครั้ง → login padmin + personnel login ได้
 - [ ] 7.9 บันทึกใน checklist deploy (§10.5 เดิม)
 
 ---
 
-## 8. ตัวอย่างการใช้ (หลัง implement)
+## 8. Full-migration Export/Import (JSON dump) — เพิ่ม 2026-09-19
+
+ย้ายข้อมูล server เก่า → ใหม่ **ครบทุก field ตามที่อยู่ใน DB** (แม่นกว่า CSV — ไม่มีปัญหา comma/multiline/emoji):
+
+| Endpoint | Auth | หน้าที่ |
+|---|---|---|
+| `GET /api/bootstrap/export?token=<EXPORT_TOKEN>` | EXPORT_TOKEN (env) หรือ JWT super_admin | คืน JSON dump: `groups + rooms + roomImages + personnel(รวม password hash + isChangePassword) + userPayments + roomPayments` — **คง UUID เดิม** |
+| `POST /api/bootstrap/import` (file = JSON dump) | BootstrapGuard เดิม | wipe ตารางที่เกี่ยว → insert ตามลำดับ FK → ensureSuperAdmin (idempotent) |
+
+- รับทั้ง response ที่มี `data` wrapper และ raw dump
+- `profileImage` = URL text เดิม (ไม่อัปโหลดรูปใหม่ — R2 ใช้ bucket เดียวกัน)
+- dump ไม่รวม: notifications/announcements/survey2 answers (สร้างใหม่ต่อ server)
+- ⚠️ env เพิ่ม: `EXPORT_TOKEN=<random>` — export มี PII + password hash ห้ามเปิดสาธารณะ
+
+**ตัวอย่าง:**
+```bash
+# server เก่า: export
+curl -o dump.json "https://<old>/api/bootstrap/export?token=$EXPORT_TOKEN"
+# server ใหม่: import (Swagger หรือ curl)
+curl -X POST "https://<new>/api/bootstrap/import" -H "x-bootstrap-token: $BOOTSTRAP_TOKEN" -F "file=@dump.json;type=application/json"
+```
+
+**E2E ผ่าน 2026-09-19:** export 251/9/60/2/0/1 → import → จำนวนครบ, 105105 login รหัสเดิมได้, profileImage/group/room ถูกต้อง, mustChangePassword คงสถานะเดิม
+
+---
+
+## 9. ตัวอย่างการใช้ (หลัง implement)
 
 ```
 1. deploy BE ใหม่ + ตั้ง .env: BOOTSTRAP_TOKEN=xxx, BOOTSTRAP_ENABLED=true
