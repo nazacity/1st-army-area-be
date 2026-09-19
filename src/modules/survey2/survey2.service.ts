@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { In, Repository } from 'typeorm'
+import { In, Not, Repository } from 'typeorm'
+import { Personnel } from '../personnel/entities/personnel.entity'
 import { Survey2 } from './entities/survey2.entity'
 import { Survey2Part } from './entities/survey2-part.entity'
 import {
@@ -567,6 +568,176 @@ export class Survey2Service {
       })
       .orderBy('surveyUser.createdAt', 'DESC')
       .getMany()
+  }
+
+  // ---------- สรุปผล ----------
+
+  async getSurveyResults(surveyId: string) {
+    const survey = await this.getSurveyById(surveyId)
+
+    const respondents = await this.getSurveyUsers(surveyId)
+    const respondentIds = new Set(respondents.map((r) => r.personnelId))
+
+    const totalPersonnel = await this.surveyUserRepository.manager.find(
+      Personnel,
+      { where: { isDeleted: false }, select: ['id', 'rank', 'firstName', 'lastName', 'groupId'] },
+    )
+    const personnelById = new Map(totalPersonnel.map((p) => [p.id, p]))
+    const personnelName = (p?: Pick<Personnel, 'rank' | 'firstName' | 'lastName'> | null) =>
+      p ? `${p.rank ?? ''} ${p.firstName} ${p.lastName}`.trim() : '-'
+    const nonRespondents = totalPersonnel.filter((p) => !respondentIds.has(p.id))
+
+    // นับตอบต่อ choice: join userSurvey เพื่อกรองด้วย surveyId
+    const choiceCounts = await this.userAnswerRepository
+      .createQueryBuilder('ua')
+      .select('ua.surveyAnswerId', 'answerId')
+      .addSelect('count(*)', 'cnt')
+      .innerJoin('ua.userSurvey', 'us')
+      .where('us.surveyId = :surveyId AND us.isDeleted = false AND ua.isDeleted = false', {
+        surveyId,
+      })
+      .groupBy('ua.surveyAnswerId')
+      .getRawMany<{ answerId: string; cnt: string }>()
+    const countByAnswer = new Map(choiceCounts.map((c) => [c.answerId, Number(c.cnt)]))
+
+    // จำนวนคนที่ตอบคำถามนั้น (distinct user_survey) + comment ("อื่นๆ โปรดระบุ")
+    const perQuestion = await this.userAnswerRepository
+      .createQueryBuilder('ua')
+      .select('q.id', 'questionId')
+      .addSelect('count(distinct ua.userSurveyId)', 'answered')
+      .addSelect('count(ua.answer)', 'comments')
+      .innerJoin('ua.userSurvey', 'us')
+      .innerJoin(Survey2QuestionAnswer, 'sa', 'sa.id = ua.surveyAnswerId')
+      .innerJoin(Survey2Question, 'q', 'q.id = sa.questionId')
+      .where('us.surveyId = :surveyId AND us.isDeleted = false AND ua.isDeleted = false', {
+        surveyId,
+      })
+      .groupBy('q.id')
+      .getRawMany<{ questionId: string; answered: string; comments: string }>()
+    const statsByQuestion = new Map(
+      perQuestion.map((q) => [q.questionId, { answered: Number(q.answered), comments: Number(q.comments) }]),
+    )
+
+    const textRows = await this.userAnswerTextRepository.find({
+      where: { isDeleted: false, userSurvey: { surveyId, isDeleted: false } },
+      order: { createdAt: 'ASC' },
+    })
+
+    const commentRows = await this.userAnswerRepository.find({
+      where: {
+        isDeleted: false,
+        answer: Not(''), // NULL ถูกกรองเอง (NULL <> '' ไม่จริง)
+        userSurvey: { surveyId, isDeleted: false },
+      },
+      order: { createdAt: 'ASC' },
+    })
+
+    // map: answerId → questionId (สำหรับจัด comment เข้าคำถาม)
+    const answerQuestionMap = new Map<string, string>()
+    for (const part of survey.parts ?? []) {
+      for (const question of part.questions ?? []) {
+        for (const answer of question.answers ?? []) {
+          answerQuestionMap.set(answer.id, question.id)
+        }
+      }
+    }
+
+    const parts = survey.parts
+      .filter((part) => part.display)
+      .map((part) => ({
+        id: part.id,
+        title: part.title,
+        questions: (part.questions ?? [])
+          .filter((question) => question.display)
+          .map((question) => {
+            const stats = statsByQuestion.get(question.id)
+            const answeredCount = stats?.answered ?? 0
+            const base = respondents.length || 1
+
+            const textAnswers = textRows
+              .filter((t) => t.questionId === question.id)
+              .map((t) => ({
+                id: t.id,
+                text: t.answer,
+                personnelName: personnelName(personnelById.get(t.personnelId)),
+                createdAt: t.createdAt,
+              }))
+
+            const comments = commentRows
+              .filter((c) => answerQuestionMap.get(c.surveyAnswerId) === question.id)
+              .map((c) => ({
+                id: c.id,
+                text: c.answer ?? '',
+                personnelName: personnelName(personnelById.get(c.personnelId)),
+              }))
+
+            return {
+              id: question.id,
+              question: question.question,
+              type: question.type,
+              required: question.required,
+              answeredCount,
+              choices: (question.answers ?? [])
+                .filter((a) => a.display)
+                .sort((a, b) => a.index - b.index)
+                .map((a) => {
+                  const count = countByAnswer.get(a.id) ?? 0
+                  return {
+                    id: a.id,
+                    answer: a.answer,
+                    imageUrl: a.imageUrl,
+                    weight: a.weight,
+                    isOther: a.isOther,
+                    count,
+                    percent: Math.round((count / base) * 100),
+                  }
+                }),
+              textAnswers,
+              comments,
+            }
+          }),
+      }))
+
+    return {
+      survey: {
+        id: survey.id,
+        title: survey.title,
+        description: survey.description,
+        startDate: survey.startDate,
+        endDate: survey.endDate,
+      },
+      totals: {
+        respondents: respondents.length,
+        totalPersonnel: totalPersonnel.length,
+        noResponse: nonRespondents.length,
+      },
+      parts,
+      respondents: respondents.map((r) => ({
+        id: r.id,
+        personnelId: r.personnelId,
+        name: personnelName(r.personnel),
+        rank: r.personnel?.rank ?? null,
+        submittedAt: r.createdAt,
+      })),
+      nonRespondents: nonRespondents.map((p) => ({
+        id: p.id,
+        name: personnelName(p),
+        rank: p.rank ?? null,
+      })),
+    }
+  }
+
+  private answerByIdFromSurvey(
+    survey: Survey2,
+    answerId: string,
+  ): Survey2QuestionAnswer | undefined {
+    for (const part of survey.parts ?? []) {
+      for (const question of part.questions ?? []) {
+        const found = (question.answers ?? []).find((a) => a.id === answerId)
+        if (found) return found
+      }
+    }
+    return undefined
   }
 
   // ---------- ฝั่งผู้ใช้ ----------

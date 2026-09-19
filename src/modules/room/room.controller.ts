@@ -6,6 +6,7 @@ import {
   HttpException,
   HttpStatus,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
   Query,
@@ -15,12 +16,12 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 import { ResponseModel } from 'src/model/response.model'
 import { RequestPersonnelModel } from 'src/model/request.model'
-import { AdminJwtAuthGuard } from '../auth/guard/admin-auth.guard'
+import { PersonnelAdminJwtAuthGuard } from '../auth/guard/personnel-admin-auth.guard'
 import { PersonnelJwtAuthGuard } from '../auth/guard/personnel-auth.guard'
 import { PersonnelPasswordChangedGuard } from 'src/common/guards/personnel-password-changed.guard'
 import { AdminRolesGuard } from 'src/common/guards/admin-roles.guard'
 import { AdminRoles } from 'src/common/decorators/admin-roles.decorator'
-import { AdminRole } from '../admin/entities/admin.entity'
+import { PersonnelAdminRole } from '../personnel-admin/entities/personnel-admin.entity'
 import { RoomService } from './room.service'
 import { Room } from './entities/room.entity'
 import { RoomImage } from './entities/room-image.entity'
@@ -38,7 +39,7 @@ export class RoomController {
   constructor(private readonly roomService: RoomService) {}
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(PersonnelAdminJwtAuthGuard)
   @Get()
   async getRooms(
     @Query() query: RoomQueryDto,
@@ -77,9 +78,57 @@ export class RoomController {
     }
   }
 
+  @ApiBearerAuth('Personnel Authorization')
+  @UseGuards(PersonnelJwtAuthGuard, PersonnelPasswordChangedGuard)
+  @Post('/my/images')
+  async createMyRoomImage(
+    @Request() req: RequestPersonnelModel,
+    @Body() dto: CreateRoomImageDto & { roomId: string },
+  ): Promise<ResponseModel<RoomImage>> {
+    try {
+      const image = await this.roomService.createRoomImageByPersonnel(
+        req.user.id,
+        dto,
+      )
+
+      return { data: image }
+    } catch (error) {
+      throw new HttpException(
+        {
+          message: error.message,
+        },
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+  }
+
+  @ApiBearerAuth('Personnel Authorization')
+  @UseGuards(PersonnelJwtAuthGuard, PersonnelPasswordChangedGuard)
+  @Delete('/my/images/:imageId')
+  async deleteMyRoomImage(
+    @Request() req: RequestPersonnelModel,
+    @Param('imageId', ParseUUIDPipe) imageId: string,
+  ): Promise<ResponseModel<RoomImage>> {
+    try {
+      const image = await this.roomService.deleteRoomImageByPersonnel(
+        req.user.id,
+        imageId,
+      )
+
+      return { data: image }
+    } catch (error) {
+      throw new HttpException(
+        {
+          message: error.message,
+        },
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+  }
+
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.BUILDING)
+  @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
+  @AdminRoles(PersonnelAdminRole.BUILDING)
   @Post('/seed')
   async seedRooms(): Promise<ResponseModel<Room[]>> {
     try {
@@ -97,8 +146,8 @@ export class RoomController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.PERSONNEL, AdminRole.BUILDING)
+  @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
+  @AdminRoles(PersonnelAdminRole.PERSONNEL, PersonnelAdminRole.BUILDING)
   @Post()
   async createRoom(
     @Body() dto: CreateRoomDto,
@@ -118,7 +167,7 @@ export class RoomController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(PersonnelAdminJwtAuthGuard)
   @Get('/:id')
   async getRoomById(@Param('id') id: string): Promise<ResponseModel<Room>> {
     try {
@@ -136,8 +185,8 @@ export class RoomController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.PERSONNEL, AdminRole.BUILDING)
+  @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
+  @AdminRoles(PersonnelAdminRole.PERSONNEL, PersonnelAdminRole.BUILDING)
   @Patch('/:id')
   async updateRoom(
     @Param('id') id: string,
@@ -158,8 +207,8 @@ export class RoomController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.BUILDING)
+  @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
+  @AdminRoles(PersonnelAdminRole.BUILDING)
   @Delete('/:id')
   async deleteRoom(@Param('id') id: string): Promise<ResponseModel<Room>> {
     try {
@@ -177,7 +226,7 @@ export class RoomController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(PersonnelAdminJwtAuthGuard)
   @Get('/:id/personnels')
   async getRoomPersonnels(
     @Param('id') id: string,
@@ -197,8 +246,8 @@ export class RoomController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.PERSONNEL, AdminRole.BUILDING)
+  @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
+  @AdminRoles(PersonnelAdminRole.PERSONNEL, PersonnelAdminRole.BUILDING)
   @Post('/:id/assign/:personnelId')
   async assignPersonnel(
     @Param('id') id: string,
@@ -222,8 +271,8 @@ export class RoomController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.PERSONNEL, AdminRole.BUILDING)
+  @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
+  @AdminRoles(PersonnelAdminRole.PERSONNEL, PersonnelAdminRole.BUILDING)
   @Delete('/:id/assign/:personnelId')
   async unassignPersonnel(
     @Param('id') id: string,
@@ -247,7 +296,7 @@ export class RoomController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(PersonnelAdminJwtAuthGuard)
   @Get('/:id/images')
   async getRoomImages(
     @Param('id') id: string,
@@ -267,8 +316,8 @@ export class RoomController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.BUILDING)
+  @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
+  @AdminRoles(PersonnelAdminRole.BUILDING)
   @Post('/:id/images')
   async createRoomImage(
     @Param('id') id: string,
@@ -294,8 +343,8 @@ export class RoomController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.BUILDING)
+  @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
+  @AdminRoles(PersonnelAdminRole.BUILDING)
   @Delete('/:id/images/:imageId')
   async deleteRoomImage(
     @Param('id') id: string,

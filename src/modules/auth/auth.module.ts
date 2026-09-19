@@ -6,6 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 import { AdminModule } from '../admin/admin.module'
 import { UserModule } from '../user/user.module'
 import { PersonnelModule } from '../personnel/personnel.module'
+import { PersonnelAdminModule } from '../personnel-admin/personnel-admin.module'
 import { JwtConfigModule, JwtConfigService } from '../config/jwt'
 import { LegacyConfigModule } from '../config/legacy'
 import { AuthController } from './auth.controller'
@@ -13,6 +14,7 @@ import { AuthService } from './auth.service'
 import { AdminJwtStrategy } from './strategy/admin-jwt.strategy'
 import { UserJwtStrategy } from './strategy/user-jwt.strategy'
 import { PersonnelJwtStrategy } from './strategy/personnel-jwt.strategy'
+import { PersonnelAdminJwtStrategy } from './strategy/personnel-admin-jwt.strategy'
 
 @Module({
   imports: [
@@ -29,11 +31,18 @@ import { PersonnelJwtStrategy } from './strategy/personnel-jwt.strategy'
     UserModule,
     AdminModule,
     PersonnelModule,
+    PersonnelAdminModule,
     LegacyConfigModule,
     HttpModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, UserJwtStrategy, AdminJwtStrategy, PersonnelJwtStrategy],
+  providers: [
+    AuthService,
+    UserJwtStrategy,
+    AdminJwtStrategy,
+    PersonnelJwtStrategy,
+    PersonnelAdminJwtStrategy,
+  ],
   exports: [AuthService],
 })
 export class AuthModule {}

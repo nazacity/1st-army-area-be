@@ -1,8 +1,15 @@
-import { ApiProperty } from '@nestjs/swagger'
-import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator'
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import {
+  IsBoolean,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator'
 import { PaginationDto } from 'src/utils/pagination'
+import { PersonnelAdminRole } from '../entities/personnel-admin.entity'
 
-export class AdminCreateDto {
+export class PersonnelAdminCreateDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
@@ -24,22 +31,22 @@ export class AdminCreateDto {
   lastName: string
 
   @ApiProperty()
-  @IsOptional()
-  @IsString()
-  profileImageUrl: string
-
-  @ApiProperty()
   @IsNotEmpty()
   @IsString()
   phoneNumber: string
 
-  @ApiProperty({ type: [String] })
-  @IsNotEmpty()
-  @IsArray()
-  units: string[]
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  profileImageUrl: string
+
+  @ApiPropertyOptional({ enum: PersonnelAdminRole })
+  @IsOptional()
+  @IsEnum(PersonnelAdminRole)
+  role?: PersonnelAdminRole
 }
 
-export class AdminUpdateDto {
+export class PersonnelAdminUpdateDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
@@ -64,21 +71,19 @@ export class AdminUpdateDto {
   @IsOptional()
   @IsString()
   password: string
-}
 
-export class AdminSuperUpdateDto extends AdminUpdateDto {
-  @ApiProperty({ required: false, type: [String] })
+  @ApiPropertyOptional({ enum: PersonnelAdminRole })
   @IsOptional()
-  @IsArray()
-  units: string[]
-}
+  @IsEnum(PersonnelAdminRole)
+  role?: PersonnelAdminRole
 
-export class AdminQueryDto extends PaginationDto {
   @ApiProperty({ required: false })
   @IsOptional()
-  @IsString()
-  unitId?: string
+  @IsBoolean()
+  isActive: boolean
+}
 
+export class PersonnelAdminQueryDto extends PaginationDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()

@@ -17,8 +17,6 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 import { RequestAdminUserModel } from 'src/model/request.model'
 import { ResponseModel } from 'src/model/response.model'
 import { AdminJwtAuthGuard } from '../auth/guard/admin-auth.guard'
-import { AdminRolesGuard } from 'src/common/guards/admin-roles.guard'
-import { AdminRoles } from 'src/common/decorators/admin-roles.decorator'
 import { AdminService } from './admin.service'
 import {
   AdminCreateDto,
@@ -26,7 +24,7 @@ import {
   AdminSuperUpdateDto,
   AdminUpdateDto,
 } from './dto/admin.dto'
-import { Admin, AdminRole } from './entities/admin.entity'
+import { Admin } from './entities/admin.entity'
 
 @ApiTags('Admin Services')
 @Controller('admin')
@@ -53,14 +51,6 @@ export class AdminController {
 
   @ApiBearerAuth('Admin Authorization')
   @UseGuards(AdminJwtAuthGuard)
-  @Get('/roles')
-  async getAdminRoles(): Promise<ResponseModel<string[]>> {
-    return { data: Object.values(AdminRole) }
-  }
-
-  @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.SUPER_ADMIN, AdminRole.IT)
   @Get()
   async getAdmins(
     @Query() query: AdminQueryDto,
@@ -79,8 +69,7 @@ export class AdminController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.SUPER_ADMIN, AdminRole.IT)
+  @UseGuards(AdminJwtAuthGuard)
   @Post()
   async createAdmin(
     @Body() adminCreateDto: AdminCreateDto,
@@ -100,8 +89,7 @@ export class AdminController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.SUPER_ADMIN, AdminRole.IT)
+  @UseGuards(AdminJwtAuthGuard)
   @Patch('/super/:id')
   async updateAdminBySuperAdmin(
     @Param('id') id: string,
@@ -125,8 +113,7 @@ export class AdminController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.SUPER_ADMIN, AdminRole.IT)
+  @UseGuards(AdminJwtAuthGuard)
   @Patch('/:id')
   async updateAdmin(
     @Param('id') id: string,
@@ -150,8 +137,7 @@ export class AdminController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.SUPER_ADMIN)
+  @UseGuards(AdminJwtAuthGuard)
   @Delete('/:id')
   async deleteAdmin(
     @Param('id') id: string,

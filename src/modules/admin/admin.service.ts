@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { Crypto } from 'src/utils/crypto'
 import { In, Like, Repository } from 'typeorm'
 import { AdminCreateDto, AdminQueryDto, AdminSuperUpdateDto, AdminUpdateDto } from './dto/admin.dto'
-import { Admin, AdminRole } from './entities/admin.entity'
+import { Admin } from './entities/admin.entity'
 import { Unit } from '../unit/entities/unit.entity'
 
 @Injectable()
@@ -172,15 +172,6 @@ export class AdminService {
       })
 
       if (!admin) throw new Error('Admin is not found')
-
-      if (admin.role === AdminRole.SUPER_ADMIN) {
-        const superCount = await this.adminRepository.count({
-          where: { role: AdminRole.SUPER_ADMIN, isDeleted: false },
-        })
-        if (superCount <= 1) {
-          throw new Error('ไม่สามารถลบ super_admin คนสุดท้ายได้')
-        }
-      }
 
       const updatedAdmin = {
         ...admin,

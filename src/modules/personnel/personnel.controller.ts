@@ -20,12 +20,12 @@ import { InjectDataSource } from '@nestjs/typeorm'
 import { DataSource } from 'typeorm'
 import { ResponseModel } from 'src/model/response.model'
 import { RequestPersonnelModel } from 'src/model/request.model'
-import { AdminJwtAuthGuard } from '../auth/guard/admin-auth.guard'
+import { PersonnelAdminJwtAuthGuard } from '../auth/guard/personnel-admin-auth.guard'
 import { PersonnelJwtAuthGuard } from '../auth/guard/personnel-auth.guard'
 import { PersonnelPasswordChangedGuard } from 'src/common/guards/personnel-password-changed.guard'
 import { AdminRolesGuard } from 'src/common/guards/admin-roles.guard'
 import { AdminRoles } from 'src/common/decorators/admin-roles.decorator'
-import { AdminRole } from '../admin/entities/admin.entity'
+import { PersonnelAdminRole } from '../personnel-admin/entities/personnel-admin.entity'
 import { PersonnelService } from './personnel.service'
 import { Personnel } from './entities/personnel.entity'
 import {
@@ -49,7 +49,7 @@ export class PersonnelController {
   private readonly dataSource: DataSource
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(PersonnelAdminJwtAuthGuard)
   @Get()
   async getPersonnels(
     @Query() query: PersonnelQueryDto,
@@ -94,8 +94,8 @@ export class PersonnelController {
 
   @ApiBearerAuth('Admin Authorization')
   @ApiConsumes('multipart/form-data')
-  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.PERSONNEL, AdminRole.IT)
+  @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
+  @AdminRoles(PersonnelAdminRole.PERSONNEL, PersonnelAdminRole.IT)
   @UseInterceptors(FileInterceptor('file'))
   @Post('/import')
   async importPersonnels(
@@ -146,7 +146,7 @@ export class PersonnelController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(PersonnelAdminJwtAuthGuard)
   @Get('/:id')
   async getPersonnelById(
     @Param('id') id: string,
@@ -166,8 +166,8 @@ export class PersonnelController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.PERSONNEL)
+  @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
+  @AdminRoles(PersonnelAdminRole.PERSONNEL)
   @Post()
   async createPersonnel(
     @Body() dto: CreatePersonnelDto,
@@ -207,9 +207,34 @@ export class PersonnelController {
     }
   }
 
+  @ApiBearerAuth('Personnel Authorization')
+  @UseGuards(PersonnelJwtAuthGuard, PersonnelPasswordChangedGuard)
+  @Post('/me/bind-line')
+  async bindMyLine(
+    @Request() req: RequestPersonnelModel,
+    @Body() dto: { lineUserId: string },
+  ): Promise<ResponseModel<Personnel>> {
+    try {
+      const personnel = await this.personnelService.bindLineUserId(
+        req.user.id,
+        dto.lineUserId,
+      )
+
+      delete (personnel as any).password
+      return { data: personnel }
+    } catch (error) {
+      throw new HttpException(
+        {
+          message: error.message,
+        },
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+  }
+
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.PERSONNEL)
+  @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
+  @AdminRoles(PersonnelAdminRole.PERSONNEL)
   @Patch('/:id')
   async updatePersonnel(
     @Param('id') id: string,
@@ -230,8 +255,8 @@ export class PersonnelController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.PERSONNEL)
+  @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
+  @AdminRoles(PersonnelAdminRole.PERSONNEL)
   @Delete('/:id')
   async deletePersonnel(
     @Param('id') id: string,
@@ -251,8 +276,8 @@ export class PersonnelController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.PERSONNEL, AdminRole.IT)
+  @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
+  @AdminRoles(PersonnelAdminRole.PERSONNEL, PersonnelAdminRole.IT)
   @Post('/:id/reset-password')
   async resetPassword(
     @Param('id') id: string,

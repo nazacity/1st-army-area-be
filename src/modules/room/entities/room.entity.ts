@@ -22,7 +22,7 @@ export class Room extends GlobalEntity {
   @Column({ type: 'int' })
   floor: number
 
-  @Column({ type: 'int', default: 2 })
+  @Column({ type: 'int', default: 6 })
   capacity: number
 
   @Column({ type: 'text', nullable: true })

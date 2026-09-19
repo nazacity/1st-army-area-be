@@ -16,11 +16,8 @@ export function toNoonBangkokDate(dateOfBirth: string): Date {
   return new Date(`${dateOfBirth}T12:00:00+07:00`)
 }
 
-export function genInitialPassword(
-  dateOfBirth: Date | string,
-  citizenId: string,
-): string {
-  // → DDMMYYYY + เลขบัตรประชาชน 13 หลัก
+export function genInitialPassword(dateOfBirth: Date | string): string {
+  // → วันเกิด DDMMYYYY (2026-09-19 — เดิมวันเกิด+บัตรประชาชน 13 หลัก)
   let day: string, month: string, year: string
   if (dateOfBirth instanceof Date) {
     // en-GB + Asia/Bangkok → 'DD/MM/YYYY'
@@ -35,7 +32,7 @@ export function genInitialPassword(
   } else {
     ;[year, month, day] = dateOfBirth.split('-')
   }
-  return `${day}${month}${year}${citizenId}`
+  return `${day}${month}${year}`
 }
 
 @Injectable()
@@ -58,6 +55,8 @@ export class PersonnelService {
 
       const qb = this.personnelRepository
         .createQueryBuilder('p')
+        .leftJoinAndSelect('p.room', 'room')
+        .leftJoinAndSelect('p.group', 'group')
         .where('p.isDeleted = false')
 
       if (query?.groupId) {
@@ -108,6 +107,66 @@ export class PersonnelService {
       })
 
       return personnel
+    } catch (error) {
+      this.logger.debug(error)
+      throw new Error(error)
+    }
+  }
+
+  // ---------- LINE ----------
+
+  async findByLineUserId(lineUserId: string): Promise<Personnel | null> {
+    return await this.personnelRepository.findOne({
+      where: { lineUserId, isDeleted: false },
+    })
+  }
+
+  // ผูก LINE ตอน login ครั้งแรก — verify รหัสผ่านก่อนแล้วจึง set lineUserId
+  async bindLineByCredentials(
+    username: string,
+    password: string,
+    lineUserId: string,
+  ): Promise<Personnel> {
+    try {
+      const personnel = await this.verifyPersonnel(username, password)
+
+      const taken = await this.personnelRepository.findOne({
+        where: { lineUserId, isDeleted: false },
+      })
+      if (taken && taken.id !== personnel.id) {
+        throw new Error('LINE นี้ถูกผูกกับบัญชีอื่นแล้ว')
+      }
+
+      personnel.lineUserId = lineUserId
+      return await this.personnelRepository.save(personnel)
+    } catch (error) {
+      this.logger.debug(error)
+      throw new Error(error)
+    }
+  }
+
+  // ผูก LINE จากหน้า profile (มี JWT แล้ว)
+  async bindLineUserId(
+    personnelId: string,
+    lineUserId: string,
+  ): Promise<Personnel> {
+    try {
+      const personnel = await this.personnelRepository.findOne({
+        where: { id: personnelId, isDeleted: false },
+      })
+      if (!personnel) throw new Error('Personnel is not found')
+
+      if (personnel.lineUserId === lineUserId) return personnel
+
+      const taken = await this.personnelRepository.findOne({
+        where: { lineUserId, isDeleted: false },
+      })
+      if (taken && taken.id !== personnelId) {
+        throw new Error('LINE นี้ถูกผูกกับบัญชีอื่นแล้ว')
+      }
+
+      personnel.lineUserId = lineUserId
+      return await this.personnelRepository.save(personnel)
     } catch (error) {
       this.logger.debug(error)
       throw new Error(error)
@@ -205,8 +264,8 @@ export class PersonnelService {
     try {
       await this.assertUniqueFields(dto)
 
-      if (!dto.citizenId || !dto.dateOfBirth) {
-        throw new Error('dateOfBirth and citizenId are required for initial password')
+      if (!dto.dateOfBirth) {
+        throw new Error('dateOfBirth is required for initial password')
       }
 
       const personnel = this.personnelRepository.create({
@@ -214,9 +273,7 @@ export class PersonnelService {
         dateOfBirth: toNoonBangkokDate(dto.dateOfBirth),
         weight: dto.weight ? Number(dto.weight) : null,
         height: dto.height ? Number(dto.height) : null,
-        password: Crypto.hash(
-          genInitialPassword(dto.dateOfBirth, dto.citizenId),
-        ),
+        password: Crypto.hash(genInitialPassword(dto.dateOfBirth)),
         isChangePassword: false,
       })
 
@@ -295,15 +352,11 @@ export class PersonnelService {
       })
 
       if (!personnel) throw new Error('Personnel is not found')
-      if (!personnel.dateOfBirth || !personnel.citizenId) {
-        throw new Error(
-          'Cannot reset password: dateOfBirth or citizenId is missing',
-        )
+      if (!personnel.dateOfBirth) {
+        throw new Error('Cannot reset password: dateOfBirth is missing')
       }
 
-      personnel.password = Crypto.hash(
-        genInitialPassword(personnel.dateOfBirth, personnel.citizenId),
-      )
+      personnel.password = Crypto.hash(genInitialPassword(personnel.dateOfBirth))
       personnel.isChangePassword = false
 
       return await this.personnelRepository.save(personnel)

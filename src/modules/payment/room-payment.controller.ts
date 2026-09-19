@@ -15,12 +15,12 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 import { ResponseModel } from 'src/model/response.model'
 import { RequestPersonnelModel } from 'src/model/request.model'
-import { AdminJwtAuthGuard } from '../auth/guard/admin-auth.guard'
+import { PersonnelAdminJwtAuthGuard } from '../auth/guard/personnel-admin-auth.guard'
 import { PersonnelJwtAuthGuard } from '../auth/guard/personnel-auth.guard'
 import { PersonnelPasswordChangedGuard } from 'src/common/guards/personnel-password-changed.guard'
 import { AdminRolesGuard } from 'src/common/guards/admin-roles.guard'
 import { AdminRoles } from 'src/common/decorators/admin-roles.decorator'
-import { AdminRole } from '../admin/entities/admin.entity'
+import { PersonnelAdminRole } from '../personnel-admin/entities/personnel-admin.entity'
 import { RoomPaymentService } from './room-payment.service'
 import { RoomPayment } from './entities/room-payment.entity'
 import { RejectPaymentDto } from './dto/user-payment.dto'
@@ -36,8 +36,8 @@ export class RoomPaymentController {
   constructor(private readonly paymentService: RoomPaymentService) {}
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.BUILDING)
+  @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
+  @AdminRoles(PersonnelAdminRole.BUILDING)
   @Get()
   async getRoomPayments(
     @Query() query: RoomPaymentQueryDto,
@@ -81,8 +81,8 @@ export class RoomPaymentController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.BUILDING)
+  @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
+  @AdminRoles(PersonnelAdminRole.BUILDING)
   @Get('/room/:roomId')
   async getRoomPaymentsByRoom(
     @Param('roomId') roomId: string,
@@ -102,8 +102,8 @@ export class RoomPaymentController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.BUILDING)
+  @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
+  @AdminRoles(PersonnelAdminRole.BUILDING)
   @Get('/summary')
   async getSummary(
     @Query() query: RoomPaymentQueryDto,
@@ -123,8 +123,8 @@ export class RoomPaymentController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.BUILDING, AdminRole.PERSONNEL)
+  @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
+  @AdminRoles(PersonnelAdminRole.BUILDING, PersonnelAdminRole.PERSONNEL)
   @Post()
   async createRoomPayment(
     @Body() dto: CreateRoomPaymentDto,
@@ -144,8 +144,8 @@ export class RoomPaymentController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.BUILDING)
+  @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
+  @AdminRoles(PersonnelAdminRole.BUILDING)
   @Get('/:id')
   async getRoomPaymentById(
     @Param('id') id: string,
@@ -165,8 +165,8 @@ export class RoomPaymentController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.BUILDING)
+  @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
+  @AdminRoles(PersonnelAdminRole.BUILDING)
   @Patch('/:id')
   async updateRoomPayment(
     @Param('id') id: string,
@@ -187,8 +187,8 @@ export class RoomPaymentController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.BUILDING)
+  @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
+  @AdminRoles(PersonnelAdminRole.BUILDING)
   @Delete('/:id')
   async deleteRoomPayment(
     @Param('id') id: string,
@@ -208,8 +208,8 @@ export class RoomPaymentController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.BUILDING)
+  @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
+  @AdminRoles(PersonnelAdminRole.BUILDING)
   @Post('/:id/confirm')
   async confirmRoomPayment(
     @Request() req: any,
@@ -233,8 +233,8 @@ export class RoomPaymentController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.BUILDING)
+  @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
+  @AdminRoles(PersonnelAdminRole.BUILDING)
   @Post('/:id/reject')
   async rejectRoomPayment(
     @Request() req: any,

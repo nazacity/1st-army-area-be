@@ -5,7 +5,7 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common'
-import { AdminRole } from 'src/modules/admin/entities/admin.entity'
+import { PersonnelAdminRole } from 'src/modules/personnel-admin/entities/personnel-admin.entity'
 
 // อนุญาต personnel (เจ้าของ — ตรวจ ownership ใน service) หรือ admin role personnel/super_admin
 // ใช้คู่กับ AuthGuard(['personnelJwt', 'adminJwt'])
@@ -20,8 +20,8 @@ export class PersonnelOrPaymentAdminGuard implements CanActivate {
 
     if (user.role) {
       if (
-        user.role === AdminRole.SUPER_ADMIN ||
-        user.role === AdminRole.PERSONNEL
+        user.role === PersonnelAdminRole.SUPER_ADMIN ||
+        user.role === PersonnelAdminRole.PERSONNEL
       ) {
         return true
       }

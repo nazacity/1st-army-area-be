@@ -397,6 +397,55 @@ export class UpdateMeDto {
   @IsOptional()
   @IsString()
   profileImage?: string
+
+  // ข้อมูลที่ผู้ใช้แก้เองได้ (ขยาย 2026-09-19) — ไม่รวม field ระบบ (username/citizenId/type/group/room)
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  nickName?: string
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  militaryId?: string
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  maritalStatus?: string
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  weight?: number
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  height?: number
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  bloodType?: string
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  medicalConditions?: string
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  vehicleRegistration?: string
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  homeProvince?: string
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  preCadetClass?: string
 }
 
 export class ChangePasswordDto {

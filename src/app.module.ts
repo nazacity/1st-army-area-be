@@ -38,6 +38,7 @@ import { PersonnelGroupModule } from './modules/personnel-group/personnel-group.
 import { RoomModule } from './modules/room/room.module';
 import { PaymentModule } from './modules/payment/payment.module';
 import { Survey2Module } from './modules/survey2/survey2.module';
+import { PersonnelAdminModule } from './modules/personnel-admin/personnel-admin.module';
 
 // Scheduler
 
@@ -107,6 +108,7 @@ import { Survey2Module } from './modules/survey2/survey2.module';
     UnitPublicModule,
     VoltraModule,
     PersonnelModule,
+    PersonnelAdminModule,
     PersonnelGroupModule,
     RoomModule,
     PaymentModule,

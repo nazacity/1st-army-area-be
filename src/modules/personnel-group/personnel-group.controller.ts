@@ -12,10 +12,10 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 import { ResponseModel } from 'src/model/response.model'
-import { AdminJwtAuthGuard } from '../auth/guard/admin-auth.guard'
+import { PersonnelAdminJwtAuthGuard } from '../auth/guard/personnel-admin-auth.guard'
 import { AdminRolesGuard } from 'src/common/guards/admin-roles.guard'
 import { AdminRoles } from 'src/common/decorators/admin-roles.decorator'
-import { AdminRole } from '../admin/entities/admin.entity'
+import { PersonnelAdminRole } from '../personnel-admin/entities/personnel-admin.entity'
 import { PersonnelGroupService } from './personnel-group.service'
 import { PersonnelsGroup } from './entities/personnel-group.entity'
 import {
@@ -29,7 +29,7 @@ export class PersonnelGroupController {
   constructor(private readonly groupService: PersonnelGroupService) {}
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(PersonnelAdminJwtAuthGuard)
   @Get()
   async getGroups(): Promise<ResponseModel<PersonnelsGroup[]>> {
     try {
@@ -47,7 +47,7 @@ export class PersonnelGroupController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard)
+  @UseGuards(PersonnelAdminJwtAuthGuard)
   @Get('/:id')
   async getGroupById(
     @Param('id') id: string,
@@ -67,8 +67,8 @@ export class PersonnelGroupController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.PERSONNEL)
+  @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
+  @AdminRoles(PersonnelAdminRole.PERSONNEL)
   @Post()
   async createGroup(
     @Body() dto: CreatePersonnelGroupDto,
@@ -88,8 +88,8 @@ export class PersonnelGroupController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.PERSONNEL)
+  @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
+  @AdminRoles(PersonnelAdminRole.PERSONNEL)
   @Patch('/:id')
   async updateGroup(
     @Param('id') id: string,
@@ -110,8 +110,8 @@ export class PersonnelGroupController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.PERSONNEL)
+  @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
+  @AdminRoles(PersonnelAdminRole.PERSONNEL)
   @Delete('/:id')
   async deleteGroup(
     @Param('id') id: string,

@@ -20,7 +20,8 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "deploy": "git pull && npm run build && pm2 restart army-area-be",
-    "import:personnel": "node --env-file=.env -r ts-node/register -r tsconfig-paths/register scripts/import-personnel.ts"
+    "import:personnel": "node --env-file=.env -r ts-node/register -r tsconfig-paths/register scripts/import-personnel.ts",
+    "seed:personnel-admin": "node --env-file=.env -r ts-node/register -r tsconfig-paths/register scripts/seed-personnel-admin.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.946.0",

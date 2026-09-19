@@ -47,8 +47,7 @@ export class RoomService {
         const isEmpty = query.isEmpty === 'true'
         rooms = rooms.filter(
           (room) =>
-            isEmpty ===
-            !(room.personnels ?? []).some((p) => !p.isDeleted),
+            isEmpty === !(room.personnels ?? []).some((p) => !p.isDeleted),
         )
       }
 
@@ -67,7 +66,7 @@ export class RoomService {
     try {
       const room = await this.roomRepository.findOne({
         where: { id, isDeleted: false },
-        relations: ['personnels', 'roomImages'],
+        relations: ['personnels.group', 'roomImages'],
       })
 
       if (!room) throw new Error('Room is not found')
@@ -129,7 +128,8 @@ export class RoomService {
 
       const occupied = (room.personnels ?? []).some((p) => !p.isDeleted)
 
-      if (occupied) throw new Error('Room is not empty, move personnel out first')
+      if (occupied)
+        throw new Error('Room is not empty, move personnel out first')
 
       room.isDeleted = true
       return await this.roomRepository.save(room)
@@ -156,7 +156,7 @@ export class RoomService {
             this.roomRepository.create({
               roomNumber,
               floor,
-              capacity: 2,
+              capacity: 6,
             }),
           )
         }
@@ -284,10 +284,52 @@ export class RoomService {
     }
   }
 
-  async deleteRoomImage(
-    roomId: string,
+  // ผู้พักอัปโหลดรูปสภาพห้องเอง — ได้เฉพาะห้องตัวเอง
+  async createRoomImageByPersonnel(
+    personnelId: string,
+    dto: CreateRoomImageDto & { roomId: string },
+  ): Promise<RoomImage> {
+    try {
+      const personnel = await this.roomRepository.manager.findOne(Personnel, {
+        where: { id: personnelId, isDeleted: false },
+      })
+
+      if (!personnel) throw new Error('Personnel is not found')
+      if (personnel.roomId !== dto.roomId) {
+        throw new Error('คุณไม่ได้พักในห้องนี้')
+      }
+
+      return await this.createRoomImage(dto.roomId, personnelId, dto)
+    } catch (error) {
+      this.logger.debug(error)
+      throw new Error(error)
+    }
+  }
+
+  // ผู้พักลบรูปได้เฉพาะที่ตัวเองอัปโหลด
+  async deleteRoomImageByPersonnel(
+    personnelId: string,
     imageId: string,
   ): Promise<RoomImage> {
+    try {
+      const image = await this.roomImageRepository.findOne({
+        where: { id: imageId, isDeleted: false },
+      })
+
+      if (!image) throw new Error('Room image is not found')
+      if (image.uploadedBy !== personnelId) {
+        throw new Error('ลบได้เฉพาะรูปที่ตัวเองอัปโหลด')
+      }
+
+      image.isDeleted = true
+      return await this.roomImageRepository.save(image)
+    } catch (error) {
+      this.logger.debug(error)
+      throw new Error(error)
+    }
+  }
+
+  async deleteRoomImage(roomId: string, imageId: string): Promise<RoomImage> {
     try {
       const image = await this.roomImageRepository.findOne({
         where: { id: imageId, roomId, isDeleted: false },

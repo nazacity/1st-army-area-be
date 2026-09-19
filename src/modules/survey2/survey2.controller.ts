@@ -14,10 +14,10 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 import { ResponseModel } from 'src/model/response.model'
-import { AdminJwtAuthGuard } from '../auth/guard/admin-auth.guard'
+import { PersonnelAdminJwtAuthGuard } from '../auth/guard/personnel-admin-auth.guard'
 import { AdminRolesGuard } from 'src/common/guards/admin-roles.guard'
 import { AdminRoles } from 'src/common/decorators/admin-roles.decorator'
-import { AdminRole } from '../admin/entities/admin.entity'
+import { PersonnelAdminRole } from '../personnel-admin/entities/personnel-admin.entity'
 import { Survey2Service } from './survey2.service'
 import { Survey2 } from './entities/survey2.entity'
 import { Survey2Part } from './entities/survey2-part.entity'
@@ -35,8 +35,8 @@ import {
 
 @ApiTags('Survey2')
 @Controller('survey2')
-@UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-@AdminRoles(AdminRole.PERSONNEL)
+@UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
+@AdminRoles(PersonnelAdminRole.PERSONNEL)
 export class Survey2Controller {
   constructor(private readonly survey2Service: Survey2Service) {}
 
@@ -61,6 +61,22 @@ export class Survey2Controller {
       return { data: users, meta: { total: users.length } }
     } catch (error) {
       throw new HttpException({ message: error.message }, HttpStatus.BAD_REQUEST)
+    }
+  }
+
+  @ApiBearerAuth('Admin Authorization')
+  @Get(':id/results')
+  async getSurveyResults(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<ResponseModel<any>> {
+    try {
+      const results = await this.survey2Service.getSurveyResults(id)
+      return { data: results }
+    } catch (error) {
+      throw new HttpException(
+        { message: `${error.message} | ${(error.stack ?? '').split('\n').slice(1, 8).join(' ⏎ ')}` },
+        HttpStatus.BAD_REQUEST,
+      )
     }
   }
 
@@ -129,8 +145,8 @@ export class Survey2Controller {
 
 @ApiTags('Survey2 Part')
 @Controller('survey2-parts')
-@UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-@AdminRoles(AdminRole.PERSONNEL)
+@UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
+@AdminRoles(PersonnelAdminRole.PERSONNEL)
 export class Survey2PartController {
   constructor(private readonly survey2Service: Survey2Service) {}
 
@@ -225,8 +241,8 @@ export class Survey2PartController {
 
 @ApiTags('Survey2 Question')
 @Controller('survey2-questions')
-@UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-@AdminRoles(AdminRole.PERSONNEL)
+@UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
+@AdminRoles(PersonnelAdminRole.PERSONNEL)
 export class Survey2QuestionController {
   constructor(private readonly survey2Service: Survey2Service) {}
 

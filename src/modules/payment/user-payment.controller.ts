@@ -16,12 +16,12 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 import { AuthGuard } from '@nestjs/passport'
 import { ResponseModel } from 'src/model/response.model'
 import { RequestPersonnelModel } from 'src/model/request.model'
-import { AdminJwtAuthGuard } from '../auth/guard/admin-auth.guard'
+import { PersonnelAdminJwtAuthGuard } from '../auth/guard/personnel-admin-auth.guard'
 import { PersonnelJwtAuthGuard } from '../auth/guard/personnel-auth.guard'
 import { PersonnelPasswordChangedGuard } from 'src/common/guards/personnel-password-changed.guard'
 import { AdminRolesGuard } from 'src/common/guards/admin-roles.guard'
 import { AdminRoles } from 'src/common/decorators/admin-roles.decorator'
-import { AdminRole } from '../admin/entities/admin.entity'
+import { PersonnelAdminRole } from '../personnel-admin/entities/personnel-admin.entity'
 import { PersonnelOrPaymentAdminGuard } from './guards/personnel-or-payment-admin.guard'
 import { UserPaymentService } from './user-payment.service'
 import { UserPayment } from './entities/user-payment.entity'
@@ -38,8 +38,8 @@ export class UserPaymentController {
   constructor(private readonly paymentService: UserPaymentService) {}
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.PERSONNEL)
+  @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
+  @AdminRoles(PersonnelAdminRole.PERSONNEL)
   @Get()
   async getUserPayments(
     @Query() query: UserPaymentQueryDto,
@@ -81,8 +81,8 @@ export class UserPaymentController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.PERSONNEL)
+  @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
+  @AdminRoles(PersonnelAdminRole.PERSONNEL)
   @Get('/summary')
   async getSummary(
     @Query() query: UserPaymentQueryDto,
@@ -126,8 +126,8 @@ export class UserPaymentController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.PERSONNEL)
+  @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
+  @AdminRoles(PersonnelAdminRole.PERSONNEL)
   @Get('/:id')
   async getUserPaymentById(
     @Param('id') id: string,
@@ -201,8 +201,8 @@ export class UserPaymentController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.PERSONNEL)
+  @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
+  @AdminRoles(PersonnelAdminRole.PERSONNEL)
   @Post('/:id/confirm')
   async confirmUserPayment(
     @Request() req: any,
@@ -226,8 +226,8 @@ export class UserPaymentController {
   }
 
   @ApiBearerAuth('Admin Authorization')
-  @UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-  @AdminRoles(AdminRole.PERSONNEL)
+  @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
+  @AdminRoles(PersonnelAdminRole.PERSONNEL)
   @Post('/:id/reject')
   async rejectUserPayment(
     @Request() req: any,

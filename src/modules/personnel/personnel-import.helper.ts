@@ -13,6 +13,7 @@ const ARMY = PersonnelType['ทบ.']
 const NAVY = PersonnelType['ทร.']
 const AIR_FORCE = PersonnelType['ทอ.']
 const POLICE = PersonnelType['ตร.']
+const SPECIAL_CAVALRY = PersonnelType['ฉก.ทม.รอ.']
 const FOREIGN = PersonnelType['มิตรประเทศ']
 
 const TYPE_MAP: Record<string, PersonnelType> = {
@@ -25,7 +26,7 @@ const TYPE_MAP: Record<string, PersonnelType> = {
   'นักบิน': ARMY,
   'บก.ทท.': ARMY,
   'มิตรประเทศ': FOREIGN,
-  'ฉก.ทม.รอ.': ARMY,
+  'ฉก.ทม.รอ.': SPECIAL_CAVALRY,
 }
 
 // มิตรเหล่า(ทอ./ทร./ตร.) + ค่าที่ map ไม่ตรง → infer จากเหล่า + สังกัดเดิม (§1.2)
@@ -38,9 +39,27 @@ function inferType(branch: string, unit: string): PersonnelType {
   return ARMY
 }
 
-const FOREIGN_COUNTRIES = ['มาเลเซีย', 'อินโดนีเซีย', 'ลาว', 'สหรัฐอเมริกา']
+const FOREIGN_COUNTRIES = [
+  'มาเลเซีย',
+  'อินโดนีเซีย',
+  'ลาว',
+  'สหรัฐอเมริกา',
+  'ออสเตเลีย',
+  'จีน',
+  'ญี่ปุ่น',
+  'ปากีสถาน',
+  'เวียดนาม',
+  'ฟิลิปปินส์',
+]
+
+// กำเนิดของกำลังพลไทย — นอกชุดนี้ = มิตรประเทศ (ใช้ประเทศจากกำเนิด)
+const THAI_ORIGINS = ['จปร.', 'นนร.', 'นนอ.', 'นรต.', 'นรพ.', 'กองหนุน', 'นป.']
 
 function resolveCountry(type: PersonnelType, origin: string): string {
+  if (origin && !THAI_ORIGINS.some((o) => origin.startsWith(o))) {
+    const found = FOREIGN_COUNTRIES.find((c) => origin.includes(c))
+    return found ?? origin
+  }
   if (type !== FOREIGN) return 'ไทย'
   const found = FOREIGN_COUNTRIES.find((c) => origin.includes(c))
   return found ?? (origin || 'มิตรประเทศ')
@@ -48,9 +67,9 @@ function resolveCountry(type: PersonnelType, origin: string): string {
 
 // ---------- Helpers ----------
 
-function genInitialPassword(dobIso: string, citizenId: string): string {
+function genInitialPassword(dobIso: string): string {
   const [y, m, d] = dobIso.split('-')
-  return `${d}${m}${y}${citizenId}` // DDMMYYYY + เลขบัตร 13 หลัก
+  return `${d}${m}${y}` // DDMMYYYY
 }
 
 function parseDob(dob: string): string | null {
@@ -73,11 +92,28 @@ function normalizePhone(raw: string): string | null {
   return digits
 }
 
+// สถานะสมรสจากฟอร์มเป็นข้อความยาว ("สมรส (จดทะเบียน) Married (Legally Registered)") → ตัดเหลือไทยสั้น
+function normalizeMarital(raw: string): string | null {
+  if (!raw) return null
+  const map: [RegExp, string][] = [
+    [/สมรส.*จดทะเบียน/i, 'สมรส (จดทะเบียน)'],
+    [/สมรส.*ไม่ได้จด|De Facto/i, 'สมรส (ไม่ได้จดทะเบียน)'],
+    [/โสด|Single/i, 'โสด'],
+    [/หย่า|Divorced/i, 'หย่า'],
+    [/หม้าย|Widowed/i, 'หม้าย'],
+    [/หมั้น|Engaged/i, 'หมั้น'],
+  ]
+  for (const [re, label] of map) {
+    if (re.test(raw)) return label
+  }
+  return raw
+}
+
 // ยศตำรวจ ≈ ยศทบ.: พ.ต.ต. ≈ พ.ต., พ.ต.ท. ≈ พ.ท. (§1.2 — แก้เป็นรายคนได้ภายหลัง)
+// ไม่ map 'Major' — CSV ใหม่ยศมิตรเป็น 'Maj.' คงค่าไว้
 const RANK_MAP: Record<string, string> = {
   'พ.ต': 'พ.ต.',
   พันตรี: 'พ.ต.',
-  Major: 'พ.ต.',
   'พ.ต.ต.': 'พ.ต.',
   'พ.ต.ท.': 'พ.ท.',
 }
@@ -128,7 +164,7 @@ async function ensureRooms(
     for (let n = 1; n <= 10; n++) {
       const roomNumber = `${floor}${String(n).padStart(2, '0')}`
       if (!byNumber.has(roomNumber)) {
-        await repo.save(repo.create({ roomNumber, floor, capacity: 2 }))
+        await repo.save(repo.create({ roomNumber, floor, capacity: 6 }))
       }
     }
   }
@@ -186,8 +222,8 @@ export async function importPersonnel(
   const seenMilitaryIds = await loadUnique('militaryId')
 
   for (const r of dataRows) {
-    if (r.length < 20 || !clean(r[1])) continue
-    const username = clean(r[1])
+    if (r.length < 25 || !clean(r[2])) continue
+    const username = clean(r[2])
 
     try {
       if (seenUsernames.has(username)) {
@@ -198,8 +234,9 @@ export async function importPersonnel(
         continue
       }
 
-      const citizenId = clean(r[17]).replace(/\D/g, '')
-      const militaryId = clean(r[18]) || null
+      const citizenId = clean(r[18]).replace(/\D/g, '')
+      const militaryRaw = clean(r[19])
+      const militaryId = militaryRaw && militaryRaw !== '-' ? militaryRaw : null
       if (citizenId && seenCitizenIds.has(citizenId)) {
         report.skipped.push({ username, reason: `citizenId ซ้ำ: ${citizenId}` })
         continue
@@ -209,23 +246,23 @@ export async function importPersonnel(
         continue
       }
 
-      const sourceTypeRaw = clean(r[12])
-      const branch = clean(r[13])
-      const unit = clean(r[14])
-      const origin = clean(r[10])
-      const dob = parseDob(clean(r[24]))
+      // CSV ใหม่ 30 คอลัมน์: [13]จำพวก [14]เหล่า [15]สังกัดเดิม [11]กำเนิด [25]วันเกิด
+      const sourceTypeRaw = clean(r[13])
+      const branch = clean(r[14])
+      const unit = clean(r[15])
+      const origin = clean(r[11])
+      const dob = parseDob(clean(r[25]))
 
-      // ค่าผสม ("ทบ., ฉก.ทม.รอ.") = ติ๊กคร่อม → ใช้ case ฉก. (§1.2)
-      const typeKey = sourceTypeRaw.includes('ฉก.') ? 'ฉก.ทม.รอ.' : sourceTypeRaw
-      const type = TYPE_MAP[typeKey] ?? inferType(branch, unit)
+      // map ตรงตัวก่อน ค่าผสม ("ทบ., ฉก.ทม.รอ." / "มิตรเหล่า(...), ฉก.ทม.รอ.") → infer จากเหล่า+สังกัดเดิม
+      const type = TYPE_MAP[sourceTypeRaw] ?? inferType(branch, unit)
       const isSpecialForces = sourceTypeRaw.includes('ฉก.')
 
-      // ห้อง: 0/000/0000/'' = ไม่มีห้องพัก
-      const roomRaw = clean(r[15])
+      // ห้อง: 0/000/''/นอกช่วง 201–710 = ไม่มีห้องพัก (พักภายนอก)
+      const roomRaw = clean(r[16])
       const roomNumber =
         /^\d{3}$/.test(roomRaw) && !/^0+$/.test(roomRaw) ? roomRaw : null
 
-      const groupName = clean(r[2])
+      const groupName = clean(r[3])
       const groupId = groupName ? groups.get(groupName) ?? null : null
 
       const personnel = personnelRepo.create({
@@ -237,43 +274,41 @@ export async function importPersonnel(
         sourceTypeRaw,
         isSpecialForces,
         branchOfService: normalizeBranch(branch),
-        rank: normalizeRank(clean(r[3])),
-        firstName: clean(r[4]),
-        lastName: clean(r[5]),
-        nickName: clean(r[6]) || null,
-        phone: normalizePhone(r[7]),
-        email: clean(r[8]) || null,
-        lineId: clean(r[9]) || null,
+        rank: normalizeRank(clean(r[4])),
+        firstName: clean(r[5]),
+        lastName: clean(r[6]),
+        nickName: clean(r[7]) || null,
+        phone: normalizePhone(r[8]),
+        email: clean(r[9]) || null,
+        lineId: clean(r[10]) || null,
         origin: origin || null,
         preCadetClass:
-          clean(r[11]) && clean(r[11]) !== '-' ? clean(r[11]) : null,
+          clean(r[12]) && clean(r[12]) !== '-' ? clean(r[12]) : null,
         unitBeforeCourse: unit || null,
-        address: clean(r[16]) || null,
+        address: clean(r[17]) || null,
         militaryId,
-        maritalStatus: clean(r[19]) || null,
-        weight: clean(r[20]) ? Number(clean(r[20])) : null,
-        height: clean(r[21]) ? Number(clean(r[21])) : null,
-        bloodType: clean(r[22]) || null,
-        medicalConditions: clean(r[23]) || null,
-        remark: clean(r[25]) || null,
-        vehicleRegistration: clean(r[26]) || null,
+        maritalStatus: normalizeMarital(clean(r[20])),
+        weight: clean(r[21]) ? Number(clean(r[21])) : null,
+        height: clean(r[22]) ? Number(clean(r[22])) : null,
+        bloodType: clean(r[23]) || null,
+        medicalConditions: clean(r[24]) || null,
+        remark: clean(r[29]) || null,
+        vehicleRegistration: clean(r[27]) || null,
         homeProvince:
-          clean(r[27]) && clean(r[27]) !== 'มิตรประเทศ' ? clean(r[27]) : null,
+          clean(r[28]) && clean(r[28]) !== 'มิตรประเทศ' ? clean(r[28]) : null,
         groupId,
         roomId: roomNumber ? rooms.get(roomNumber) ?? null : null,
         isChangePassword: false,
       })
 
-      if (dob && citizenId.length === 13) {
-        personnel.password = await bcrypt.hash(
-          genInitialPassword(dob, citizenId),
-          10,
-        )
+      // รหัสผ่านตั้งต้น = วันเกิด DDMMYYYY (2026-09-19 — เดิมวันเกิด+บัตร 13 หลัก)
+      if (dob) {
+        personnel.password = await bcrypt.hash(genInitialPassword(dob), 10)
       } else {
         report.warnings.push({
           username,
           reason:
-            'DOB/citizenId ไม่ครบ → import สำเร็จแต่ยัง login ไม่ได้ (ต้องแก้ข้อมูลก่อน)',
+            'วันเกิดไม่ครบ → import สำเร็จแต่ยัง login ไม่ได้ (รหัสตั้งต้น gen จากวันเกิด DDMMYYYY)',
         })
       }
 

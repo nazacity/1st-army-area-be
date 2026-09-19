@@ -43,7 +43,7 @@
 | 15 | สังกัดเดิม | `unit_before_course` | text, nullable | |
 | 16 | หมายเลขห้องพัก | `room` → FK `room_id` | string | `0`/`000` = ไม่มีห้องพัก (29 รายการ) → `null` |
 | 17 | ที่อยู่ปัจจุบัน | `address` | text | |
-| 18 | เลขบัตรประชาชน | `citizen_id` | string(13), **unique** | ใช้ gen password + เก็บเป็น record |
+| 18 | เลขบัตรประชาชน | `citizen_id` | string(13), **unique** | เก็บเป็น record (เดิมใช้ gen password — ปรับ 2026-09-19 ใช้วันเกิดอย่างเดียว) |
 | 19 | เลขบัตรประจำตัวทหาร/ตำรวจ | `military_id` | string, **unique**, nullable | |
 | 20 | สถานะสมรส | `marital_status` | text | 5 ค่า |
 | 21 | น้ำหนัก | `weight` | numeric, nullable | |
@@ -101,12 +101,13 @@ src/modules/
 │   ├── personnel.service.ts
 │   ├── personnel.entity.ts
 │   └── dto/
+├── personnel-admin/        # แอดมินระบบ personnel (ตารางแยก ${ENV}_personnel_admin)
 ├── personnel-group/        # พวก (1–9) one-to-many → personnel
 ├── room/                   # ห้องพัก 201–710 one-to-many → personnel
 ├── payment/                # รวม user-payment + room-payment
 │   ├── user-payment.entity.ts
 │   └── room-payment.entity.ts
-└── (admin module มีอยู่แล้ว → ขยายเพิ่ม role/rights)
+└── admin/                  # (ของระบบเก่า 1st-army-area — ไม่เกี่ยวกับระบบนี้)
 ```
 
 ### 2.2 ERD
@@ -130,7 +131,7 @@ src/modules/
                       │ profile_image    │  │    │ image (R2 url)      │
                       └──────┬───────────┘  │    │ caption             │
                              │ 1            │    │ taken_at            │
-                ┌────────────┴───────┐      │    │ uploaded_by (FK→admin)│
+                ┌────────────┴───────┐      │    │ uploaded_by (FK→personnel_admin)│
                 │    user_payment    │      │    └─────────────────────┘
                 │────────────────────│      │
                 │ id (uuid)          │      │
@@ -139,7 +140,7 @@ src/modules/
                 │ payment_date       │      │
                 │ slip_image (R2)    │      │
                 │ status (enum)      │      │
-                │ confirmed_by (FK→admin)  │
+                │ confirmed_by (FK→personnel_admin)  │
                 │ confirmed_at       │      │
                 └────────────────────┘      │
                                             │
@@ -153,7 +154,7 @@ src/modules/
                               │ payment_date               │
                               │ slip_image (R2)            │
                               │ status (enum)              │
-                              │ confirmed_by (FK→admin)    │
+                              │ confirmed_by (FK→personnel_admin)    │
                               │ confirmed_at               │
                               └────────────────────────────┘
 
@@ -210,10 +211,10 @@ export class Personnel extends GlobalEntity {
   isChangePassword: boolean;     // false = ยังใช้ password ตั้งต้น ต้องบังคับเปลี่ยน
 
   @Column({ type: 'varchar', length: 13, unique: true, nullable: true })
-  citizenId: string;             // 13 หลัก — ใช้ gen password ตั้งต้น (unique, NULL ได้หลายแถวใน Postgres)
+  citizenId: string;             // 13 หลัก (unique, NULL ได้หลายแถวใน Postgres)
 
   @Column({ type: 'date', nullable: true })
-  dateOfBirth: string;           // YYYY-MM-DD — ใช้ gen password ตั้งต้น
+  dateOfBirth: string;           // YYYY-MM-DD — ใช้ gen password ตั้งต้น (DDMMYYYY)
 
   @Column({ type: 'enum', enum: PersonnelType })
   type: PersonnelType;           // ทบ./ทร./ทอ./ตร./มิตรประเทศ
@@ -355,8 +356,8 @@ export class Room extends GlobalEntity {
   @Column()
   floor: number;                 // 2–7 (derive จากหลักร้อย)
 
-  @Column({ default: 2 })
-  capacity: number;              // จุได้กี่คน
+  @Column({ default: 6 })
+  capacity: number;              // จุได้กี่คน (max ต่อห้อง — ปรับเป็น 6 แล้ว 2026-09-19)
 
   @Column({ nullable: true })
   note: string;
@@ -406,11 +407,13 @@ export class RoomImage extends GlobalEntity {
 
 > ใช้ตารางแยก (`[]RoomImage`) ไม่ใช่ JSON array column — เพราะต้อง filter/เรียงตามวันที่, ผูกกับ R2 lifecycle, และ soft-delete ต่อรูปได้
 
-### 3.5 `Admin` + Rights (ขยายจาก module เดิม)
+### 3.5 `PersonnelAdmin` + Rights (ตารางแยก — แยกจาก admin ระบบเก่า)
+
+> **แยกตารางแล้ว (2026-09-18):** เดิมออกแบบให้ "ขยาย" `Admin` (ตาราง `${ENV}_admin1` ของระบบเก่า) แต่ทำให้แอดมิน 2 ระบบป่นกันในตารางเดียว — ปัจจุบันย้ายมาเป็น entity `PersonnelAdmin` ตาราง `${ENV}_personnel_admin` ของแยก พร้อม strategy `personnelAdminJwt` + login `/auth/personnel-admin/sign-in` ส่วนตาราง `${ENV}_admin1` ของระบบเก่าถูกถอน column `role`/`isActive` คืนสู่โครงสร้างเดิม
 
 ```typescript
-// src/modules/admin/admin.entity.ts (เพิ่ม field)
-export enum AdminRole {
+// src/modules/personnel-admin/entities/personnel-admin.entity.ts
+export enum PersonnelAdminRole {
   SUPER_ADMIN = 'super_admin',
   IT = 'it',                     // แอดมิน IT
   PERSONNEL = 'personnel',       // แอดมินกำลังพล
@@ -418,15 +421,34 @@ export enum AdminRole {
   EDUCATION = 'education',       // แอดมินการศึกษา
 }
 
-@Entity({ name: `${process.env.ENV}_admin1` })  // ชื่อตารางเดิมของโปรเจ็ค
-export class Admin extends GlobalEntity {
-  // ...username, password, name, phone, profileImage (เดิม)
+@Entity({ name: `${process.env.ENV}_personnel_admin` })
+export class PersonnelAdmin extends GlobalEntity {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-  @Column({ type: 'enum', enum: AdminRole, default: AdminRole.PERSONNEL })
-  role: AdminRole;
+  @Column({ unique: true })
+  username: string;
+
+  @Column()
+  password: string;              // bcrypt hash
+
+  @Column()
+  firstName: string;
+
+  @Column()
+  lastName: string;
+
+  @Column({ nullable: true })
+  profileImageUrl: string;
+
+  @Column()
+  phoneNumber: string;
+
+  @Column({ type: 'enum', enum: PersonnelAdminRole, default: PersonnelAdminRole.PERSONNEL })
+  role: PersonnelAdminRole;
 
   @Column({ default: true })
-  isActive: boolean;
+  isActive: boolean;             // false = ห้าม login
 }
 ```
 
@@ -434,7 +456,7 @@ Rights enforcement: Guard + Decorator
 
 ```typescript
 // src/common/decorators/admin-roles.decorator.ts
-export const AdminRoles = (...roles: AdminRole[]) => SetMetadata('adminRoles', roles);
+export const AdminRoles = (...roles: PersonnelAdminRole[]) => SetMetadata('adminRoles', roles);
 
 // src/common/guards/admin-roles.guard.ts
 @Injectable()
@@ -444,8 +466,8 @@ export class AdminRolesGuard implements CanActivate {
 }
 
 // ใช้งาน:
-@UseGuards(AdminJwtAuthGuard, AdminRolesGuard)
-@AdminRoles(AdminRole.PERSONNEL)
+@UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
+@AdminRoles(PersonnelAdminRole.PERSONNEL)
 @Patch(':id')
 update(...) {}
 ```
@@ -557,8 +579,8 @@ export class RoomPayment extends GlobalEntity {
 ### 4.1 กฎการสร้าง Password ตั้งต้น
 
 ```
-plain password ตั้งต้น = {DDMMYYYY ของวันเกิด}{เลขบัตรประชาชน 13 หลัก}
-เช่น เกิด 8/1/1992, บัตร 1509901114792 → "080119921509901114792" (21 ตัว)
+plain password ตั้งต้น = {DDMMYYYY ของวันเกิด}          ← ปรับแล้ว 2026-09-19 (เดิมวันเกิด+เลขบัตร 13 หลัก)
+เช่น เกิด 8/1/1992 → "08011992" (8 ตัว)
 เก็บเป็น bcrypt hash (cost ≥ 10) ใน `password`
 `isChangePassword` = false
 ```
@@ -605,7 +627,7 @@ Middleware/Guard เสริม (แนะนำ): `PersonnelPasswordChangedGua
 | Personnel CRUD | ✅ | ❌ | ✅ | ❌ | view only |
 | Group CRUD + จัดพวก | ✅ | ❌ | ✅ | ❌ | view only |
 | Room CRUD + จัดห้อง | ✅ | ❌ | ✅ | ✅ | view only |
-| Room image อัปโหลด/ลบ | ✅ | ❌ | ❌ | ✅ | ❌ |
+| Room image อัปโหลด/ลบ | ✅ | ❌ | ✅ (ห้องตัวเอง — ลบได้เฉพาะรูปตัวเอง, 2026-09-19) | ✅ | ❌ |
 | Import CSV กำลังพล | ✅ | ✅ | ✅ | ❌ | ❌ |
 | User payment ยืนยัน | ✅ | ❌ | ✅ | ❌ | ❌ |
 | Room payment ดู/ยืนยัน | ✅ | ❌ | ❌ | ✅ | ❌ |
@@ -614,13 +636,15 @@ Middleware/Guard เสริม (แนะนำ): `PersonnelPasswordChangedGua
 หมายเหตุ:
 - `super_admin` ผ่านทุกอย่างเสมอ (hardcode ใน `AdminRolesGuard`)
 - `it` = ดูแลระบบ/บัญชีแอดมิน แต่ไม่แตะข้อมูลกำลังพลเชิงธุรกิจ
-- ผู้ใช้ (personnel) ยืนยันตัวด้วย JWT ตัวเอง — แยก strategy จาก admin ตาม pattern เดิมของโปรเจ็ค (`userJwt` / `adminJwt`)
+- ผู้ใช้ (personnel) ยืนยันตัวด้วย JWT ตัวเอง (`personnelJwt`) — แอดมินระบบนี้ใช้ `personnelAdminJwt` (ตาราง `${ENV}_personnel_admin`) แยกจาก `adminJwt` ของระบบเก่า (ตาราง `${ENV}_admin1`) โดยสนิท
 
 ### 5.2 Seed Admin ตั้งต้น
 
 ```
-super_admin / (เปลี่ยนตอน deploy ครั้งแรก)
+npm run seed:personnel-admin -- <username> <password>   # สร้าง super_admin ตั้งต้นในตาราง ${ENV}_personnel_admin
 ```
+
+> ต้องรันครั้งแรกหลัง deploy ทุก environment (dev ทำแล้ว 2026-09-18)
 
 ---
 
@@ -632,17 +656,17 @@ super_admin / (เปลี่ยนตอน deploy ครั้งแรก)
 
 | Method | Path | Guard | คำอธิบาย |
 |---|---|---|---|
-| `GET` | `/personnel` | adminJwt (personnel\|it\|building\|education view) | รายการทั้งหมด + filter `?groupId=&roomId=&type=&search=&page=&limit=` |
-| `GET` | `/personnel/:id` | adminJwt | ดูรายคน |
+| `GET` | `/personnel` | personnelAdminJwt (personnel\|it\|building\|education view) | รายการทั้งหมด + filter `?groupId=&roomId=&type=&search=&page=&limit=` |
+| `GET` | `/personnel/:id` | personnelAdminJwt | ดูรายคน |
 | `GET` | `/personnel/me` | personnelJwt | ดู profile ตัวเอง |
 | `PATCH` | `/personnel/me` | personnelJwt | แก้ข้อมูลตัวเอง (field จำกัด: phone, email, lineId, address, profileImage) |
-| `POST` | `/personnel` | adminJwt + role personnel | สร้างรายใหม่ (server gen password ตั้งต้นจาก DOB+citizenId) |
-| `PATCH` | `/personnel/:id` | adminJwt + role personnel | แก้ข้อมูล (รวมจัด group/room) |
-| `DELETE` | `/personnel/:id` | adminJwt + role personnel | soft delete (`isDeleted = true`) |
-| `POST` | `/personnel/:id/reset-password` | adminJwt + role personnel\|it | รีเซ็ตกลับ password ตั้งต้น + `isChangePassword=false` |
+| `POST` | `/personnel` | personnelAdminJwt + role personnel | สร้างรายใหม่ (server gen password ตั้งต้นจาก DOB — DDMMYYYY) |
+| `PATCH` | `/personnel/:id` | personnelAdminJwt + role personnel | แก้ข้อมูล (รวมจัด group/room) |
+| `DELETE` | `/personnel/:id` | personnelAdminJwt + role personnel | soft delete (`isDeleted = true`) |
+| `POST` | `/personnel/:id/reset-password` | personnelAdminJwt + role personnel\|it | รีเซ็ตกลับ password ตั้งต้น + `isChangePassword=false` |
 | `POST` | `/personnel/change-password` | personnelJwt | เปลี่ยนรหัสผ่านตัวเอง (ใช้ตอน force change) |
-| `POST` | `/personnel/import` | adminJwt + role personnel\|it | upload CSV → bulk import (ดูหัวข้อ 7) |
-| `GET` | `/personnel/export` | adminJwt + role personnel | export รายชื่อ (csv/xlsx) |
+| `POST` | `/personnel/import` | personnelAdminJwt + role personnel\|it | upload CSV → bulk import (ดูหัวข้อ 7) |
+| `GET` | `/personnel/export` | personnelAdminJwt + role personnel | export รายชื่อ (csv/xlsx) |
 
 **ตัวอย่าง CreatePersonnelDto:**
 
@@ -669,54 +693,56 @@ Service ต้อง: ตรวจ `username` ซ้ำ → gen plain `DDMMYYYY 
 
 | Method | Path | Guard | คำอธิบาย |
 |---|---|---|---|
-| `GET` | `/personnel-groups` | adminJwt | รายการพวกทั้งหมด (+ จำนวนคนในแต่ละพวก) |
-| `GET` | `/personnel-groups/:id` | adminJwt | รายละเอียด + รายชื่อคนในพวก |
-| `POST` | `/personnel-groups` | adminJwt + role personnel | สร้างพวก |
-| `PATCH` | `/personnel-groups/:id` | adminJwt + role personnel | แก้ชื่อ/หัวหน้าพวก |
-| `DELETE` | `/personnel-groups/:id` | adminJwt + role personnel | ลบ (ได้เมื่อไม่มีคนอยู่ หรือย้ายคนออกก่อน) |
+| `GET` | `/personnel-groups` | personnelAdminJwt | รายการพวกทั้งหมด (+ จำนวนคนในแต่ละพวก) |
+| `GET` | `/personnel-groups/:id` | personnelAdminJwt | รายละเอียด + รายชื่อคนในพวก |
+| `POST` | `/personnel-groups` | personnelAdminJwt + role personnel | สร้างพวก |
+| `PATCH` | `/personnel-groups/:id` | personnelAdminJwt + role personnel | แก้ชื่อ/หัวหน้าพวก |
+| `DELETE` | `/personnel-groups/:id` | personnelAdminJwt + role personnel | ลบ (ได้เมื่อไม่มีคนอยู่ หรือย้ายคนออกก่อน) |
 
 ### 6.3 Room Module — `/api/rooms`
 
 | Method | Path | Guard | คำอธิบาย |
 |---|---|---|---|
-| `GET` | `/rooms` | adminJwt | รายการห้องทั้งหมด + filter `?floor=&isEmpty=` |
-| `GET` | `/rooms/:id` | adminJwt | รายละเอียดห้อง + ผู้พัก |
-| `POST` | `/rooms` | adminJwt + role personnel\|building | เพิ่มห้อง |
-| `POST` | `/rooms/seed` | adminJwt + role building | generate 201–710 ทีเดียว |
-| `PATCH` | `/rooms/:id` | adminJwt + role personnel\|building | แก้ capacity/note |
-| `DELETE` | `/rooms/:id` | adminJwt + role building | ลบ (ห้องต้องว่าง) |
-| `GET` | `/rooms/:id/personnels` | adminJwt | รายชื่อผู้พักในห้อง |
-| `POST` | `/rooms/:id/assign/:personnelId` | adminJwt + role personnel\|building | จัดคนเข้าห้อง (ตรวจ capacity) |
-| `DELETE` | `/rooms/:id/assign/:personnelId` | adminJwt + role personnel\|building | ย้ายออกจากห้อง |
-| `GET` | `/rooms/:id/images` | adminJwt (building\|personnel\|super) + personnelJwt ที่อยู่ห้องนั้น | ดูภาพสถานภาพห้องทั้งหมด (เรียงตาม takenAt) |
-| `POST` | `/rooms/:id/images` | adminJwt + role building | อัปโหลดภาพสถานภาพก่อนเข้าอยู่: `image` (R2 URL), `caption?`, `takenAt?` — auto `uploadedBy` |
-| `DELETE` | `/rooms/:id/images/:imageId` | adminJwt + role building | ลบภาพ (soft delete) |
+| `GET` | `/rooms` | personnelAdminJwt | รายการห้องทั้งหมด + filter `?floor=&isEmpty=` |
+| `GET` | `/rooms/:id` | personnelAdminJwt | รายละเอียดห้อง + ผู้พัก |
+| `POST` | `/rooms` | personnelAdminJwt + role personnel\|building | เพิ่มห้อง |
+| `POST` | `/rooms/seed` | personnelAdminJwt + role building | generate 201–710 ทีเดียว |
+| `PATCH` | `/rooms/:id` | personnelAdminJwt + role personnel\|building | แก้ capacity/note |
+| `DELETE` | `/rooms/:id` | personnelAdminJwt + role building | ลบ (ห้องต้องว่าง) |
+| `GET` | `/rooms/:id/personnels` | personnelAdminJwt | รายชื่อผู้พักในห้อง |
+| `POST` | `/rooms/:id/assign/:personnelId` | personnelAdminJwt + role personnel\|building | จัดคนเข้าห้อง (ตรวจ capacity) |
+| `DELETE` | `/rooms/:id/assign/:personnelId` | personnelAdminJwt + role personnel\|building | ย้ายออกจากห้อง |
+| `GET` | `/rooms/:id/images` | personnelAdminJwt (building\|personnel\|super) + personnelJwt ที่อยู่ห้องนั้น | ดูภาพสถานภาพห้องทั้งหมด (เรียงตาม takenAt) |
+| `POST` | `/rooms/:id/images` | personnelAdminJwt + role building | อัปโหลดภาพสถานภาพก่อนเข้าอยู่: `image` (R2 URL), `caption?`, `takenAt?` — auto `uploadedBy` |
+| `DELETE` | `/rooms/:id/images/:imageId` | personnelAdminJwt + role building | ลบภาพ (soft delete) |
 
-### 6.4 Admin Module — `/api/admin` (ขยายจากเดิม)
+### 6.4 Personnel Admin Module — `/api/personnel-admins` (ตารางแยกจากระบบเก่า)
 
 | Method | Path | Guard | คำอธิบาย |
 |---|---|---|---|
-| `POST` | `/auth/admin/sign-in` | public | login แอดมิน (มีเดิม) |
-| `GET` | `/admin` | adminJwt + role super_admin\|it | รายการแอดมิน |
-| `GET` | `/admin/:id` | adminJwt + role super_admin\|it | รายละเอียด |
-| `POST` | `/admin` | adminJwt + role super_admin\|it | สร้างแอดมิน + ระบุ `role` |
-| `PATCH` | `/admin/:id` | adminJwt + role super_admin\|it | แก้ข้อมูล/เปลี่ยน role/toggle isActive |
-| `DELETE` | `/admin/:id` | adminJwt + role super_admin | ลบแอดมิน (กันลบตัวเอง + กันลบ super_admin ตัวสุดท้าย) |
-| `GET` | `/admin/roles` | adminJwt | ดูรายการ role ทั้งหมด (สำหรับ dropdown) |
+| `POST` | `/auth/personnel-admin/sign-in` | public | login แอดมินระบบ personnel |
+| `GET` | `/personnel-admins` | personnelAdminJwt + role super_admin\|it | รายการแอดมิน |
+| `GET` | `/personnel-admins/info` | personnelAdminJwt | ข้อมูลตัวเองจาก token |
+| `POST` | `/personnel-admins` | personnelAdminJwt + role super_admin\|it | สร้างแอดมิน + ระบุ `role` |
+| `PATCH` | `/personnel-admins/super/:id` | personnelAdminJwt + role super_admin\|it | แก้ข้อมูล/เปลี่ยน role/toggle isActive |
+| `DELETE` | `/personnel-admins/:id` | personnelAdminJwt + role super_admin | ลบแอดมิน (กันลบตัวเอง + กันลบ super_admin ตัวสุดท้าย) |
+| `GET` | `/personnel-admins/roles` | personnelAdminJwt | ดูรายการ role ทั้งหมด (สำหรับ dropdown) |
+
+> หมายเหตุ: `/auth/admin/sign-in` + `/admin/*` = ของระบบเก่า (admin1) ไม่เกี่ยวกับระบบนี้
 
 ### 6.5 User Payment Module — `/api/user-payments` (เงินรุ่นรายบุคคล)
 
 | Method | Path | Guard | คำอธิบาย |
 |---|---|---|---|
-| `GET` | `/user-payments` | adminJwt + role personnel\|super | ทั้งหมด + filter `?userId=&status=&from=&to=` |
+| `GET` | `/user-payments` | personnelAdminJwt + role personnel\|super | ทั้งหมด + filter `?userId=&status=&from=&to=` |
 | `GET` | `/user-payments/my` | personnelJwt | ประวัติการจ่ายของตัวเอง |
-| `GET` | `/user-payments/:id` | adminJwt (personnel) เจ้าของ | รายละเอียด |
+| `GET` | `/user-payments/:id` | personnelAdminJwt (personnel) เจ้าของ | รายละเอียด |
 | `POST` | `/user-payments` | personnelJwt | แจ้งชำระ: title, amount, paymentDate, slipImage |
 | `PATCH` | `/user-payments/:id` | personnelJwt (เจ้าของ, ถ้า status=pending) | แก้ไขรายการที่ยังไม่ยืนยัน |
 | `DELETE` | `/user-payments/:id` | personnelJwt (เจ้าของ, pending) เจ้าของ / admin | ลบรายการ |
-| `POST` | `/user-payments/:id/confirm` | adminJwt + role personnel | ยืนยัน → status=approved, confirmedBy, confirmedAt |
-| `POST` | `/user-payments/:id/reject` | adminJwt + role personnel | ปฏิเสธ + reason |
-| `GET` | `/user-payments/summary` | adminJwt + role personnel | สรุปยอดรวม/จำนวนคนจ่าย/ค้างชำระ ตามช่วงวันที่ |
+| `POST` | `/user-payments/:id/confirm` | personnelAdminJwt + role personnel | ยืนยัน → status=approved, confirmedBy, confirmedAt |
+| `POST` | `/user-payments/:id/reject` | personnelAdminJwt + role personnel | ปฏิเสธ + reason |
+| `GET` | `/user-payments/summary` | personnelAdminJwt + role personnel | สรุปยอดรวม/จำนวนคนจ่าย/ค้างชำระ ตามช่วงวันที่ |
 
 Flow: ผู้ใช้อัปสลิปผ่าน R2 (`POST /r2/...` เดิม ได้ URL) → สร้าง user-payment (pending) → แอดมินกำลังพล confirm/reject
 
@@ -724,16 +750,16 @@ Flow: ผู้ใช้อัปสลิปผ่าน R2 (`POST /r2/...` เ
 
 | Method | Path | Guard | คำอธิบาย |
 |---|---|---|---|
-| `GET` | `/room-payments` | adminJwt + role building\|super | ทั้งหมด + filter `?roomId=&status=&period=&from=&to=` |
-| `GET` | `/room-payments/room/:roomId` | adminJwt + role building\|super | ประวัติเงินของห้องนั้น |
+| `GET` | `/room-payments` | personnelAdminJwt + role building\|super | ทั้งหมด + filter `?roomId=&status=&period=&from=&to=` |
+| `GET` | `/room-payments/room/:roomId` | personnelAdminJwt + role building\|super | ประวัติเงินของห้องนั้น |
 | `GET` | `/room-payments/my-room` | personnelJwt | ประวัติเงินห้องตัวเอง (ดูได้, แก้ไม่ได้) |
-| `GET` | `/room-payments/:id` | adminJwt + role building | รายละเอียด |
-| `POST` | `/room-payments` | adminJwt + role building\|personnel | บันทึกรายรับของห้อง (title, amount, roomId, paidByUserId?, period, slipImage?) |
-| `PATCH` | `/room-payments/:id` | adminJwt + role building | แก้ไข (ถ้า pending) |
-| `DELETE` | `/room-payments/:id` | adminJwt + role building | ลบ |
-| `POST` | `/room-payments/:id/confirm` | adminJwt + role building | ยืนยันสลิป/ยอด |
-| `POST` | `/room-payments/:id/reject` | adminJwt + role building | ปฏิเสธ + reason |
-| `GET` | `/room-payments/summary` | adminJwt + role building | สรุปรายห้อง: ยอดเก็บได้/ค้าง, แยกตาม period |
+| `GET` | `/room-payments/:id` | personnelAdminJwt + role building | รายละเอียด |
+| `POST` | `/room-payments` | personnelAdminJwt + role building\|personnel | บันทึกรายรับของห้อง (title, amount, roomId, paidByUserId?, period, slipImage?) |
+| `PATCH` | `/room-payments/:id` | personnelAdminJwt + role building | แก้ไข (ถ้า pending) |
+| `DELETE` | `/room-payments/:id` | personnelAdminJwt + role building | ลบ |
+| `POST` | `/room-payments/:id/confirm` | personnelAdminJwt + role building | ยืนยันสลิป/ยอด |
+| `POST` | `/room-payments/:id/reject` | personnelAdminJwt + role building | ปฏิเสธ + reason |
+| `GET` | `/room-payments/summary` | personnelAdminJwt + role building | สรุปรายห้อง: ยอดเก็บได้/ค้าง, แยกตาม period |
 
 ---
 
@@ -756,8 +782,8 @@ Script แยกเป็น npm script: `npm run import:personnel -- <path-to-c
    - country: type = มิตรประเทศ → ดูจาก กำเนิด (มาเลเซีย/อินโดนีเซีย/ลาว/สหรัฐฯ), อื่นๆ → "ไทย"
 4. Validate ต่อแถว:
    - username / citizenId / militaryId / schoolEmail ไม่ซ้ำ (ใน CSV และใน DB — ทั้ง 4 field เป็น unique)
-   - citizenId ครบ 13 หลัก (ถ้าไม่ครบ → ยัง import ได้ แต่ gen password ไม่ได้ → ใส่ error report)
-5. Gen password: plain = DDMMYYYY + citizenId → bcrypt.hash(plain, 10)
+   - วันเกิดครบ (ไม่ครบ → ยัง import ได้ แต่ gen password ไม่ได้ → ใส่ warning report)
+5. Gen password: plain = DDMMYYYY (วันเกิด) → bcrypt.hash(plain, 10) — ไม่ต้องมีบัตรครบ (2026-09-19)
 6. Upsert เป็นรายแถว (transaction ต่อแถว — ต่อ row ล้มไม่ด่าวทั้งชุด)
 7. พิมพ์รายงาน: สำเร็จ N / ข้าม M (เหตุผล) / error K (รายละเอียดแถว)
 ```
@@ -976,7 +1002,7 @@ export async function importPersonnel(
         isChangePassword: false,
       });
 
-      // gen password ตั้งต้นเมื่อข้อมูลครบ (DOB + บัตร 13 หลัก) — ถ้าไม่ครบ ยัง insert ได้ แต่ login ไม่ได้จนกว่าแอดมินจะแก้ข้อมูล
+      // gen password ตั้งต้นจากวันเกิด (DDMMYYYY) — ไม่มีวันเกิด ยัง insert ได้ แต่ login ไม่ได้จนกว่าแอดมินจะแก้ข้อมูล
       if (dob && citizenId.length === 13) {
         personnel.password = await bcrypt.hash(
           genInitialPassword(dobRaw, citizenId),
@@ -985,7 +1011,7 @@ export async function importPersonnel(
       } else {
         report.skipped.push({
           username,
-          reason: 'ข้อมูลไม่ครบสำหรับ gen password (DOB หรือบัตรประชาชนไม่ครบ 13 หลัก)',
+          reason: 'วันเกิดไม่ครบสำหรับ gen password (DDMMYYYY)',
         });
       }
 
@@ -1235,6 +1261,40 @@ Reference: §8.4 (ฝั่งแอดมิน), §5.1, §8.6
 - [ ] 8.3 ยืนยัน mapping type กำกวมกับเจ้าภาพข้อมูล (§1.2, §9) — **เตรียมรายการแล้วที่ `docs/mapping-confirmation.md`** (มิตรเหล่า 7 · สป. 15 · นักบิน 11 · บก.ทท. 7 · ฉก. 5 · พ.ท. 5 · ไม่มีรหัสผ่าน 13) — รอเจ้าภาพข้อมูลยืนยัน ⚠️ 105228 (มิตรเหล่า ราบ) infer เป็น ทบ. โดย default
 - [x] 8.4 ทดสอบ rights: แต่ละ role เข้า path ที่ไม่มีสิทธิ์ → 403 (2026-09-17 — สร้าง admin 4 role (it/personnel/building/education) ยิงตาม matrix: GET /personnel + /personnel-groups ทุก role 200; POST /personnel เฉพาะ personnel; import personnel|it; /user-payments personnel; /room-payments + room images + assign building; /admin it — ผลตรง matrix ทั้งหมด แล้วลบ test admins)
 - [x] 8.5 เตรียม deploy (Docker/CI ตาม pattern โปรเจ็ค) (2026-09-17 — Dockerfile + .gitlab-ci.yml + helm มีอยู่เดิมใช้ได้; ตรวจ `csv-parse`/`bcrypt` อยู่ใน runtime dependencies (สำคัญเพราะ import helper import จาก src แล้ว); `npm run build` ผ่าน; ไม่มี env var ใหม่)
+
+### Stage 9 — แยก Admin ระบบ personnel ออกจากระบบเก่า (2026-09-18)
+
+- [x] 9.1 module `personnel-admin` ใหม่ (ตาราง `${ENV}_personnel_admin`, entity `PersonnelAdmin` + enum `PersonnelAdminRole`) — แยกจากตาราง `admin1` ของระบบเก่าโดยสนิท (เดิมขยาย Admin entity ทำให้แอดมิน 2 ระบบป่นกัน)
+- [x] 9.2 auth: strategy `personnelAdminJwt` + guard + `POST /auth/personnel-admin/sign-in` (ตรวจ `isActive`); ถอน `role`/`isActive`/enum/`GET /admin/roles` ออกจาก admin module เดิม (synchronize drop column ให้ — admin1 กลับสู่โครงสร้างระบบเก่า)
+- [x] 9.3 controllers ฝั่ง personnel (personnel, personnel-group, room, user-payment, room-payment, survey2) เปลี่ยนเป็น `PersonnelAdminJwtAuthGuard`; CRUD แอดมิน → `/personnel-admins` (§6.4 ใหม่)
+- [x] 9.4 seed `npm run seed:personnel-admin -- <user> <pass>` + smoke test ผ่าน: login ใหม่, it สร้างได้/ลบ 403, isActive=false login ไม่ได้, token ระบบเก่าโดนปฏิเสธบน endpoint personnel, old `/auth/admin/sign-in` ยัง work
+- [ ] 9.5 deploy จริง: รัน seed บน prod หลัง synchronize (ไม่ seed → ระบบ personnel login แอดมินไม่ได้เลย) แล้วสร้างแอดมิน role อื่นผ่าน FE `/admin/admins`
+
+### Stage 10 — Import CSV v2 (ล้างข้อมูลใหม่ทั้งชุด)
+
+- [x] 10.1 CSV ใหม่ `ฐานข้อมูล 105 ครับ - การตอบแบบฟอร์ม 1.csv` (30 คอลัมน์, เรียงใหม่จาก Google Forms export) — แก้ index mapping ใน `personnel-import.helper.ts` ทั้งชุด (2026-09-19)
+- [x] 10.2 แก้ logic จำพวก: ค่าผสม ("มิตรเหล่า(...), ฉก.ทม.รอ." / "นักบิน, มิตรเหล่า(...)") map ตรงตัวก่อน ไม่ตรง → inferType — ผล: 105228/105229 = ทร.+ฉก., 105231/105232 = ทอ. (2026-09-19)
+- [x] 10.3 แก้ `resolveCountry`: กำเนิดนอกชุด จปร./นนร./นนอ./นรต./นรพ./กองหนุน/นป. = ใช้ประเทศจากกำเนิด (เช่น 105248 ฟิลิปปินส์ type ทบ. → country ฟิลิปปินส์) + militaryId `'-'` → null (2026-09-19)
+- [x] 10.4 **รหัสผ่านตั้งต้น = วันเกิด DDMMYYYY อย่างเดียว** (§4.1, 2026-09-19 — เดิมวันเกิด+บัตร 13 หลัก) แก้ทั้ง import helper + `genInitialPassword` ใน personnel.service (create/reset-password)
+- [x] 10.5 ล้างข้อมูลเดิม dev: `dev_user_payment` (2) + `dev_survey2_user_answer_text/answer/user` (6) + `dev_personnel` (202) แล้ว import ใหม่ — **ผล: 251 สำเร็จ / 0 ข้าม / 0 error / warn 1 (105242 ไม่มีวันเกิด → ไม่มีรหัสผ่าน)**; ห้องตรง CSV 204 คน (2xx=42, 3xx=35, 4xx=42, 5xx=41, 6xx=36, 7xx=8); ทดสอบ login รหัส DDMMYYYY ผ่าน (105105 → 08011992) (2026-09-19)
+- [ ] 10.6 เก็บตกจาก CSV v2: 105242 ข้อมูลแถบว่าง (จำพวก/กำเนิด/วันเกิด/บัตร/เหล่า) ต้องเก็บเติม · ห้อง `2804` (105239) นอกช่วง 201–710 → null (ยืนยันกับเจ้าภาพ) · บัตร ปปช. ว่าง 22 คน (ส่วนใหญ่มิตรประเทศ — ใช้พาสปอร์ต)
+
+### Stage 11 — ผลสรุปแบบสอบถาม (2026-09-19)
+
+- [x] 11.1 BE `GET /survey2/:id/results` (survey2.service `getSurveyResults`) — สรุปต่อคำถาม: นับ choice + % + weight รวม, คำถาม text → รายการข้อความ+ผู้ตอบ, comment ("อื่นๆ โปรดระบุ"), จำนวนผู้ตอบ/ทั้งหมด/ยังไม่ตอบ + รายชื่อ (2026-09-19)
+- [x] 11.2 แก้ `getPersonnels` join room + group (`leftJoinAndSelect`) — แก้ FE ตารางกำลังพลโชว์ "-" ที่ room/group (2026-09-19)
+- [x] 11.3 FE หน้า `/admin/surveys/[id]/results` — การ์ดสรุป (ผู้ตอบ/อัตราตอบ/ยังไม่ตอบ) + accordion รายชื่อคนไม่ตอบ + ต่อคำถาม bar chart ตัวเลือก (% + count + weight) + ตารางคำตอบ text + comments + export CSV (BOM) + ปุ่ม "ดูผลสรุป" ในหน้า [id] (2026-09-19)
+- [x] 11.4 อัปเดต capacity default 2 → 6 (room.entity, room.service seed, import helper, UPDATE dev_room 60 ห้อง) (2026-09-19)
+- [x] 11.5 E2E ยืนยัน: personnel ตอบ select/multi_select/weight+comment/text → results นับถูกครบทุกประเภท, ชื่อผู้ตอบถูก resolve (2026-09-19 — ทดสอบแล้วเก็บกวาดข้อมูลทดสอบ + reset-password กลับ)
+- [x] 11.6 รูปประกอบคำถาม: FE form อัปโหลดผ่าน `/r2/image` → `imageUrl` (สร้าง/แก้), thumbnail ใน list, แสดงในหน้าตอบ (2026-09-19)
+- [x] 11.7 personnel อัปโหลดรูปสภาพห้องเอง: `POST /rooms/my/images` + `DELETE /rooms/my/images/:imageId` (personnelJwt — อัปได้เฉพาะห้องตัวเอง, ลบได้เฉพาะรูปตัวเอง) + หน้า `/my-room` ปุ่มอัปโหลด/ไอคอนลบบนรูปตัวเอง (2026-09-19 — E2E ผ่าน: ห้องตัวเอง 200, ห้องอื่น reject "คุณไม่ได้พักในห้องนี้", ลบรูปตัวเอง 200)
+
+### Stage 12 — LINE Login + ฟอร์มกำลังพลใหม่ (2026-09-19)
+
+- [x] 12.1 LINE Login (แตกต่างจากระบบเก่า: **BE แลก token เอง** — secret ไม่โชว์ใน FE): `POST /auth/personnel/line-token` (code → LINE profile), `POST /auth/personnel/line-sign-in` (login ด้วย lineUserId, ไม่เจอ → bound:false), `POST /auth/personnel/bind-line` (ผูกครั้งแรกด้วย username/password), `POST /personnel/me/bind-line` (ผูกจาก profile) — lineUserId unique ตรวจซ้ำทุก path (2026-09-19)
+- [x] 12.2 FE: `/login` ปุ่ม LINE + โหมดผูกบัญชี (bound:false → form username/password), `/profile` การ์ดสถานะผูก + ปุ่ม LINE OAuth · env: BE `LINE_CLIENT_ID/SECRET/REDIRECT_URI`, FE `NEXT_PUBLIC_LINE_CLIENT_ID/REDIRECT_URI/STATE` (2026-09-19 — ⚠️ ต้องเพิ่ม callback URI ใน LINE Console + ควร regenerate secret)
+- [x] 12.3 ฟอร์มกำลังพลใหม่ (react-hook-form + yup — pattern จาก 2st-cavalry): `dto/personnel-form.dto.ts` (schema/defaults/types) + `components/pages/personnel/PersonnelFormFields.tsx` (mode admin|profile) ใช้ร่วม `/admin/personnels` dialog กับ `/profile` self-edit · profile แก้ได้เพิ่ม: nickName, militaryId, preCadetClass, maritalStatus, bloodType, weight, height, medicalConditions, vehicleRegistration, homeProvince (+เดิม phone/email/lineId/address) · แสดงเหล่า + ฉก. (2026-09-19 — UpdateMeDto ขยาย field ให้)
+- [x] 12.4 จำพวกเพิ่ม `ฉก.ทม.รอ.` เป็น enum ตัวเอง (synchronize เพิ่มค่า enum แล้ว) + TYPE_MAP import: `'ฉก.ทม.รอ.': SPECIAL_CAVALRY` + FE options/สีกราฟ dashboard · ข้อมูลเดิม 13 คน (ทบ.+ฉก.) คง type ทบ. ไว้กับ flag isSpecialForces (2026-09-19)
 
 Reference: §5.1, §9
 
