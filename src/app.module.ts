@@ -5,6 +5,7 @@ import { ThrottlerModule } from '@nestjs/throttler'
 import { ScheduleModule } from '@nestjs/schedule'
 import { AcceptLanguageResolver, I18nModule } from 'nestjs-i18n'
 import * as path from 'path'
+import { ConfigModule } from '@nestjs/config'
 import { AppConfigModule } from './modules/config/app'
 import {
   ThrottleConfigModule,
@@ -47,8 +48,14 @@ import { NotificationModule } from './modules/notification/notification.module';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      envFilePath: [`.env.${process.env.ENV || 'dev'}`, '.env'],
+    }),
     AppConfigModule,
     AuthModule,
+    ConfigModule.forRoot({
+      envFilePath: [`.env.${process.env.ENV || 'dev'}`, '.env'],
+    }),
     I18nModule.forRoot({
       fallbackLanguage: 'en',
       resolvers: [AcceptLanguageResolver],
