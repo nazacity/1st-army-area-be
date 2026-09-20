@@ -75,6 +75,15 @@ async function main() {
       },
       'Personnel Admin Authorization',
     )
+    .addApiKey(
+      {
+        type: 'apiKey',
+        description: '##### Bootstrap token (server ใหม่ — ใช้ได้เฉพาะตอนยังไม่มี super_admin)',
+        name: 'x-bootstrap-token',
+        in: 'header',
+      },
+      'Bootstrap Token',
+    )
     .build()
   const document = SwaggerModule.createDocument(app, config)
   SwaggerModule.setup('/api/docs', app, document, {

@@ -12,7 +12,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiSecurity, ApiTags } from '@nestjs/swagger'
 import { BootstrapService } from './bootstrap.service'
 import { BootstrapGuard, ExportGuard } from './bootstrap.guard'
 
@@ -23,6 +23,7 @@ class BootstrapImportDto {
 }
 
 @ApiTags('Bootstrap')
+@ApiSecurity('Bootstrap Token')
 @Controller('bootstrap')
 export class BootstrapController {
   constructor(private readonly bootstrapService: BootstrapService) {}
