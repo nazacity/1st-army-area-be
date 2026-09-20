@@ -100,7 +100,7 @@ export class NotificationRecipient extends GlobalEntity {
     - ทั้งหมด — ไม่ต้องเลือก
     - เฉพาะพวก — เลือกพวก (multi 1–9)
     - เฉพาะเหล่า — เลือกเหล่า (multi จาก options จริงใน DB)
-    - เฉพาะบุคคล — search + เลือกหลายคน (Autocomplete)
+    - เฉพาะบุคคล — **Autocomplete multi-select + ค้นหาชื่อ/รหัส** (✅ 2026-09-20)
 - ตารางประกาศที่ส่ง: หัวข้อ / ผู้รับ N คน / อ่านแล้ว N / วันที่ / ลบ
 - กดแถว → dialog สถิติ: รายชื่อ + อ่านแล้ว/ยังไม่อ่าน
 
