@@ -30,7 +30,7 @@ import {
 export class PersonnelGroupController {
   constructor(private readonly groupService: PersonnelGroupService) {}
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard)
   @Get()
   async getGroups(): Promise<ResponseModel<PersonnelsGroup[]>> {
@@ -48,7 +48,7 @@ export class PersonnelGroupController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard)
   @Get('/:id')
   async getGroupById(
@@ -68,7 +68,7 @@ export class PersonnelGroupController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
   @AdminRoles(PersonnelAdminRole.PERSONNEL)
   @Post()
@@ -89,7 +89,7 @@ export class PersonnelGroupController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
   @AdminRoles(PersonnelAdminRole.PERSONNEL)
   @Patch('/:id/members')
@@ -118,7 +118,7 @@ export class PersonnelGroupController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
   @AdminRoles(PersonnelAdminRole.PERSONNEL)
   @Patch('/:id')
@@ -140,7 +140,7 @@ export class PersonnelGroupController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
   @AdminRoles(PersonnelAdminRole.PERSONNEL)
   @Delete('/:id')

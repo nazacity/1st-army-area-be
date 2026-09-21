@@ -38,7 +38,7 @@ import {
 export class RoomController {
   constructor(private readonly roomService: RoomService) {}
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard)
   @Get()
   async getRooms(
@@ -126,7 +126,7 @@ export class RoomController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
   @AdminRoles(PersonnelAdminRole.BUILDING)
   @Post('/seed')
@@ -145,7 +145,7 @@ export class RoomController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
   @AdminRoles(PersonnelAdminRole.PERSONNEL, PersonnelAdminRole.BUILDING)
   @Post()
@@ -166,7 +166,7 @@ export class RoomController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard)
   @Get('/:id')
   async getRoomById(@Param('id') id: string): Promise<ResponseModel<Room>> {
@@ -184,7 +184,7 @@ export class RoomController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
   @AdminRoles(PersonnelAdminRole.PERSONNEL, PersonnelAdminRole.BUILDING)
   @Patch('/:id')
@@ -206,7 +206,7 @@ export class RoomController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
   @AdminRoles(PersonnelAdminRole.BUILDING)
   @Delete('/:id')
@@ -225,7 +225,7 @@ export class RoomController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard)
   @Get('/:id/personnels')
   async getRoomPersonnels(
@@ -245,7 +245,7 @@ export class RoomController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
   @AdminRoles(PersonnelAdminRole.PERSONNEL, PersonnelAdminRole.BUILDING)
   @Post('/:id/assign/:personnelId')
@@ -270,7 +270,7 @@ export class RoomController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
   @AdminRoles(PersonnelAdminRole.PERSONNEL, PersonnelAdminRole.BUILDING)
   @Delete('/:id/assign/:personnelId')
@@ -295,7 +295,7 @@ export class RoomController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard)
   @Get('/:id/images')
   async getRoomImages(
@@ -315,7 +315,7 @@ export class RoomController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
   @AdminRoles(PersonnelAdminRole.BUILDING)
   @Post('/:id/images')
@@ -342,7 +342,7 @@ export class RoomController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
   @AdminRoles(PersonnelAdminRole.BUILDING)
   @Delete('/:id/images/:imageId')

@@ -40,7 +40,7 @@ import {
 export class Survey2Controller {
   constructor(private readonly survey2Service: Survey2Service) {}
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @Get()
   async getSurveys(): Promise<ResponseModel<Survey2[]>> {
     try {
@@ -51,7 +51,7 @@ export class Survey2Controller {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @Get('users')
   async getSurveyUsers(
     @Query('surveyId', ParseUUIDPipe) surveyId: string,
@@ -64,7 +64,7 @@ export class Survey2Controller {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @Get(':id/results')
   async getSurveyResults(
     @Param('id', ParseUUIDPipe) id: string,
@@ -80,7 +80,7 @@ export class Survey2Controller {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @Get(':id')
   async getSurveyById(
     @Param('id', ParseUUIDPipe) id: string,
@@ -92,7 +92,7 @@ export class Survey2Controller {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @Post()
   async createSurvey(
     @Body() dto: Survey2CreateDto,
@@ -104,7 +104,7 @@ export class Survey2Controller {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @Patch(':id')
   async updateSurvey(
     @Param('id', ParseUUIDPipe) id: string,
@@ -117,7 +117,7 @@ export class Survey2Controller {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @Patch(':id/display')
   async updateSurveyDisplay(
     @Param('id', ParseUUIDPipe) id: string,
@@ -130,7 +130,7 @@ export class Survey2Controller {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @Delete(':id')
   async deleteSurvey(
     @Param('id', ParseUUIDPipe) id: string,
@@ -150,7 +150,7 @@ export class Survey2Controller {
 export class Survey2PartController {
   constructor(private readonly survey2Service: Survey2Service) {}
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @Get()
   async getParts(
     @Query('surveyId', ParseUUIDPipe) surveyId: string,
@@ -163,7 +163,7 @@ export class Survey2PartController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @Get(':id')
   async getPartById(
     @Param('id', ParseUUIDPipe) id: string,
@@ -175,7 +175,7 @@ export class Survey2PartController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @Post()
   async createPart(
     @Body() dto: Survey2PartCreateDto,
@@ -187,7 +187,7 @@ export class Survey2PartController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @Patch(':id')
   async updatePart(
     @Param('id', ParseUUIDPipe) id: string,
@@ -200,7 +200,7 @@ export class Survey2PartController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @Patch(':id/display')
   async updatePartDisplay(
     @Param('id', ParseUUIDPipe) id: string,
@@ -213,7 +213,7 @@ export class Survey2PartController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @Patch(':id/index')
   async updatePartIndex(
     @Param('id', ParseUUIDPipe) id: string,
@@ -226,7 +226,7 @@ export class Survey2PartController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @Delete(':id')
   async deletePart(
     @Param('id', ParseUUIDPipe) id: string,
@@ -246,7 +246,7 @@ export class Survey2PartController {
 export class Survey2QuestionController {
   constructor(private readonly survey2Service: Survey2Service) {}
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @Get()
   async getQuestions(
     @Query('partId', ParseUUIDPipe) partId: string,
@@ -259,7 +259,7 @@ export class Survey2QuestionController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @Get(':id')
   async getQuestionById(
     @Param('id', ParseUUIDPipe) id: string,
@@ -271,7 +271,7 @@ export class Survey2QuestionController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @Post()
   async createQuestion(
     @Body() dto: Survey2QuestionCreateDto,
@@ -283,7 +283,7 @@ export class Survey2QuestionController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @Patch(':id')
   async updateQuestion(
     @Param('id', ParseUUIDPipe) id: string,
@@ -296,7 +296,7 @@ export class Survey2QuestionController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @Patch(':id/display')
   async updateQuestionDisplay(
     @Param('id', ParseUUIDPipe) id: string,
@@ -309,7 +309,7 @@ export class Survey2QuestionController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @Patch(':id/index')
   async updateQuestionIndex(
     @Param('id', ParseUUIDPipe) id: string,
@@ -322,7 +322,7 @@ export class Survey2QuestionController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @Delete(':id')
   async deleteQuestion(
     @Param('id', ParseUUIDPipe) id: string,

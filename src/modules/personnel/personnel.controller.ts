@@ -14,7 +14,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common'
-import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { InjectDataSource } from '@nestjs/typeorm'
 import { DataSource } from 'typeorm'
@@ -30,6 +30,7 @@ import { PersonnelService } from './personnel.service'
 import { Personnel } from './entities/personnel.entity'
 import {
   importPersonnel,
+  updatePersonnelCsv,
   ImportReport,
 } from './personnel-import.helper'
 import {
@@ -48,7 +49,7 @@ export class PersonnelController {
   @InjectDataSource()
   private readonly dataSource: DataSource
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard)
   @Get()
   async getPersonnels(
@@ -115,8 +116,21 @@ export class PersonnelController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'ไฟล์ CSV 30 คอลัมน์ (Google Forms export) — สร้างใหม่เท่านั้น รายที่มี username อยู่แล้วจะถูกข้าม',
+        },
+      },
+      required: ['file'],
+    },
+  })
   @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
   @AdminRoles(PersonnelAdminRole.PERSONNEL, PersonnelAdminRole.IT)
   @UseInterceptors(FileInterceptor('file'))
@@ -128,6 +142,47 @@ export class PersonnelController {
       if (!file) throw new Error('CSV file is required')
 
       const report = await importPersonnel(
+        this.dataSource,
+        file.buffer.toString('utf-8'),
+      )
+
+      return { data: report }
+    } catch (error) {
+      throw new HttpException(
+        {
+          message: error.message,
+        },
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+  }
+
+  @ApiBearerAuth('Personnel Admin Authorization')
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'ไฟล์ CSV 30 คอลัมน์ (Google Forms export) — อัปเดตรายที่มี username อยู่แล้วเท่านั้น (ไม่แตะรหัสผ่านเดิม)',
+        },
+      },
+      required: ['file'],
+    },
+  })
+  @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
+  @AdminRoles(PersonnelAdminRole.PERSONNEL, PersonnelAdminRole.IT)
+  @UseInterceptors(FileInterceptor('file'))
+  @Post('/import-update')
+  async importPersonnelUpdates(
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<ResponseModel<ImportReport>> {
+    try {
+      if (!file) throw new Error('CSV file is required')
+
+      const report = await updatePersonnelCsv(
         this.dataSource,
         file.buffer.toString('utf-8'),
       )
@@ -168,7 +223,7 @@ export class PersonnelController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard)
   @Get('/:id')
   async getPersonnelById(
@@ -188,7 +243,7 @@ export class PersonnelController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
   @AdminRoles(PersonnelAdminRole.PERSONNEL)
   @Post()
@@ -255,7 +310,7 @@ export class PersonnelController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
   @AdminRoles(PersonnelAdminRole.PERSONNEL)
   @Patch('/:id')
@@ -277,7 +332,7 @@ export class PersonnelController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
   @AdminRoles(PersonnelAdminRole.PERSONNEL)
   @Delete('/:id')
@@ -298,7 +353,7 @@ export class PersonnelController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
   @AdminRoles(PersonnelAdminRole.PERSONNEL, PersonnelAdminRole.IT)
   @Post('/:id/reset-password')

@@ -35,7 +35,7 @@ import {
 export class RoomPaymentController {
   constructor(private readonly paymentService: RoomPaymentService) {}
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
   @AdminRoles(PersonnelAdminRole.BUILDING)
   @Get()
@@ -80,7 +80,7 @@ export class RoomPaymentController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
   @AdminRoles(PersonnelAdminRole.BUILDING)
   @Get('/room/:roomId')
@@ -101,7 +101,7 @@ export class RoomPaymentController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
   @AdminRoles(PersonnelAdminRole.BUILDING)
   @Get('/summary')
@@ -122,7 +122,7 @@ export class RoomPaymentController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
   @AdminRoles(PersonnelAdminRole.BUILDING, PersonnelAdminRole.PERSONNEL)
   @Post()
@@ -143,7 +143,7 @@ export class RoomPaymentController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
   @AdminRoles(PersonnelAdminRole.BUILDING)
   @Get('/:id')
@@ -164,7 +164,7 @@ export class RoomPaymentController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
   @AdminRoles(PersonnelAdminRole.BUILDING)
   @Patch('/:id')
@@ -186,7 +186,7 @@ export class RoomPaymentController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
   @AdminRoles(PersonnelAdminRole.BUILDING)
   @Delete('/:id')
@@ -207,7 +207,7 @@ export class RoomPaymentController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
   @AdminRoles(PersonnelAdminRole.BUILDING)
   @Post('/:id/confirm')
@@ -232,7 +232,7 @@ export class RoomPaymentController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
   @AdminRoles(PersonnelAdminRole.BUILDING)
   @Post('/:id/reject')

@@ -37,7 +37,7 @@ import {
 export class UserPaymentController {
   constructor(private readonly paymentService: UserPaymentService) {}
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
   @AdminRoles(PersonnelAdminRole.PERSONNEL)
   @Get()
@@ -80,7 +80,7 @@ export class UserPaymentController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
   @AdminRoles(PersonnelAdminRole.PERSONNEL)
   @Get('/summary')
@@ -125,7 +125,7 @@ export class UserPaymentController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
   @AdminRoles(PersonnelAdminRole.PERSONNEL)
   @Get('/:id')
@@ -200,7 +200,7 @@ export class UserPaymentController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
   @AdminRoles(PersonnelAdminRole.PERSONNEL)
   @Post('/:id/confirm')
@@ -225,7 +225,7 @@ export class UserPaymentController {
     }
   }
 
-  @ApiBearerAuth('Admin Authorization')
+  @ApiBearerAuth('Personnel Admin Authorization')
   @UseGuards(PersonnelAdminJwtAuthGuard, AdminRolesGuard)
   @AdminRoles(PersonnelAdminRole.PERSONNEL)
   @Post('/:id/reject')
