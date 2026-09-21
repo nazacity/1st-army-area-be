@@ -12,12 +12,25 @@ import {
 } from 'typeorm'
 
 export enum PersonnelType {
-  'ทบ.' = 'ทบ.',
-  'ทร.' = 'ทร.',
-  'ทอ.' = 'ทอ.',
-  'ตร.' = 'ตร.',
-  'ฉก.ทม.รอ.' = 'ฉก.ทม.รอ.',
-  'มิตรประเทศ' = 'มิตรประเทศ',
+  ARMY = 'ARMY',
+  NAVY = 'NAVY',
+  AIR_FORCE = 'AIR_FORCE',
+  POLICE = 'POLICE',
+  MOD = 'MOD', // กลาโหม (สป.)
+  JOINT_FORCE = 'JOINT_FORCE', // บก.ทท.
+  ROYAL_PAGE_GUARD = 'ROYAL_PAGE_GUARD', // ฉก.ทม.รอ. — ทหารมหาดเล็กราชวัลลภรักษาพระองค์
+  FOREIGN = 'FOREIGN', // มิตรประเทศ
+}
+
+export const PERSONNEL_TYPE_LABELS: Record<PersonnelType, string> = {
+  [PersonnelType.ARMY]: 'ทบ.',
+  [PersonnelType.NAVY]: 'ทร.',
+  [PersonnelType.AIR_FORCE]: 'ทอ.',
+  [PersonnelType.POLICE]: 'ตร.',
+  [PersonnelType.MOD]: 'กลาโหม',
+  [PersonnelType.JOINT_FORCE]: 'บก.ทท.',
+  [PersonnelType.ROYAL_PAGE_GUARD]: 'ฉก.ทม.รอ.',
+  [PersonnelType.FOREIGN]: 'มิตรประเทศ',
 }
 
 @Entity({

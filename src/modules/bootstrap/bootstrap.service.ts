@@ -3,7 +3,10 @@ import { InjectDataSource } from '@nestjs/typeorm'
 import { parse } from 'csv-parse'
 import { DataSource } from 'typeorm'
 import { Crypto } from 'src/utils/crypto'
-import { Personnel } from '../personnel/entities/personnel.entity'
+import {
+  Personnel,
+  PersonnelType,
+} from '../personnel/entities/personnel.entity'
 import { PersonnelsGroup } from '../personnel-group/entities/personnel-group.entity'
 import { Room } from '../room/entities/room.entity'
 import {
@@ -38,12 +41,14 @@ export interface BootstrapReport {
 }
 
 const TYPE_MAP: Record<string, string> = {
-  'ทบ.': 'ทบ.',
-  'ทร.': 'ทร.',
-  'ทอ.': 'ทอ.',
-  'ตร.': 'ตร.',
-  'ฉก.ทม.รอ.': 'ฉก.ทม.รอ.',
-  'มิตรประเทศ': 'มิตรประเทศ',
+  'ทบ.': PersonnelType.ARMY,
+  'ทร.': PersonnelType.NAVY,
+  'ทอ.': PersonnelType.AIR_FORCE,
+  'ตร.': PersonnelType.POLICE,
+  'สป.': PersonnelType.MOD,
+  'บก.ทท.': PersonnelType.JOINT_FORCE,
+  'ฉก.ทม.รอ.': PersonnelType.ROYAL_PAGE_GUARD,
+  'มิตรประเทศ': PersonnelType.FOREIGN,
 }
 
 @Injectable()
@@ -197,7 +202,7 @@ export class BootstrapService {
         const typeRaw = (r[iType] ?? '').trim()
         const isSfText = (r[iSf] ?? '').trim().toLowerCase()
         const isSfFromCol = ['ใช่', 'y', 'yes', 'true', '✓'].includes(isSfText)
-        const type = TYPE_MAP[typeRaw] ?? (typeRaw ? 'ทบ.' : null)
+        const type = TYPE_MAP[typeRaw] ?? (typeRaw ? PersonnelType.ARMY : null)
 
         const roomRaw = (r[iRoom] ?? '').trim()
         const roomNumber = /^\d{3}$/.test(roomRaw) && !/^0+$/.test(roomRaw) ? roomRaw : null

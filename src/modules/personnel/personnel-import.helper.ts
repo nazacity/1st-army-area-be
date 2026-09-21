@@ -9,24 +9,26 @@ import { Room } from '../room/entities/room.entity'
 
 // ---------- Mapping ----------
 
-const ARMY = PersonnelType['ทบ.']
-const NAVY = PersonnelType['ทร.']
-const AIR_FORCE = PersonnelType['ทอ.']
-const POLICE = PersonnelType['ตร.']
-const SPECIAL_CAVALRY = PersonnelType['ฉก.ทม.รอ.']
-const FOREIGN = PersonnelType['มิตรประเทศ']
+const ARMY = PersonnelType.ARMY
+const NAVY = PersonnelType.NAVY
+const AIR_FORCE = PersonnelType.AIR_FORCE
+const POLICE = PersonnelType.POLICE
+const MOD = PersonnelType.MOD
+const JOINT_FORCE = PersonnelType.JOINT_FORCE
+const PAGE_GUARD = PersonnelType.ROYAL_PAGE_GUARD
+const FOREIGN = PersonnelType.FOREIGN
 
 const TYPE_MAP: Record<string, PersonnelType> = {
   'ทบ.': ARMY,
   'ทร.': NAVY,
   'ทอ.': AIR_FORCE,
   'ตร.': POLICE,
-  'สป.': ARMY,
+  'สป.': MOD,
   'ทบ., นักบิน': ARMY,
   'นักบิน': ARMY,
-  'บก.ทท.': ARMY,
+  'บก.ทท.': JOINT_FORCE,
   'มิตรประเทศ': FOREIGN,
-  'ฉก.ทม.รอ.': SPECIAL_CAVALRY,
+  'ฉก.ทม.รอ.': PAGE_GUARD,
 }
 
 // มิตรเหล่า(ทอ./ทร./ตร.) + ค่าที่ map ไม่ตรง → infer จากเหล่า + สังกัดเดิม (§1.2)
@@ -37,6 +39,12 @@ function inferType(branch: string, unit: string): PersonnelType {
     return AIR_FORCE
   if (/ตำรวจ|บช\.|ภูธร|ตชด\./.test(s)) return POLICE
   return ARMY
+}
+
+// ค่าผสม/ค่าไม่ตรง map ที่มี 'ฉก.' → ROYAL_PAGE_GUARD (§1.2)
+export function refineType(type: PersonnelType, sourceTypeRaw: string): PersonnelType {
+  if (sourceTypeRaw.includes('ฉก.')) return PAGE_GUARD
+  return type
 }
 
 const FOREIGN_COUNTRIES = [
@@ -254,7 +262,10 @@ export async function importPersonnel(
       const dob = parseDob(clean(r[25]))
 
       // map ตรงตัวก่อน ค่าผสม ("ทบ., ฉก.ทม.รอ." / "มิตรเหล่า(...), ฉก.ทม.รอ.") → infer จากเหล่า+สังกัดเดิม
-      const type = TYPE_MAP[sourceTypeRaw] ?? inferType(branch, unit)
+      const type = refineType(
+        TYPE_MAP[sourceTypeRaw] ?? inferType(branch, unit),
+        sourceTypeRaw,
+      )
       const isSpecialForces = sourceTypeRaw.includes('ฉก.')
 
       // ห้อง: 0/000/''/นอกช่วง 201–710 = ไม่มีห้องพัก (พักภายนอก)
