@@ -68,7 +68,7 @@
 | `บก.ทท.` | 4 | `JOINT_FORCE` (บก.ทท.) — ทท. = กองทัพไทย ไม่ใช่ ทอ.: สังกัด หน่วยบัญชาการไซเบอร์ทหาร, สำนักกองบัญชาการ/กองพันระวังป้องกัน กองบัญชาการกองทัพไทย, หน่วยบัญชาการทหารพัฒนา — หน่วยผสม (joint) ไม่สังกัดเหล่าใดเหล่าหนึ่ง |
 | `มิตรเหล่า(ทอ./ทร./ตร.)` | 4 | รายคน (infer อัตโนมัติด้วย `inferType()` §7.1): 105231 → `AIR_FORCE` (กองบิน 46 กองทัพอากาศ, นนอ.) · 105226 → `NAVY` (กองพลนาวิกโยธิน กองทัพเรือ, นนร.) · 105235 → `POLICE` (บช.ตชด.) · 105238 → `POLICE` (ตำรวจภูธรภาค 4) |
 | `มิตรประเทศ` | 4 | `FOREIGN` (country = มาเลเซีย/อินโดนีเซีย/ลาว/สหรัฐฯ) |
-| `ฉก.ทม.รอ.` | 1 | `ROYAL_PAGE_GUARD` (ฉก.ทม.รอ.) + `is_special_forces = true` — ทหารมหาดเล็กราชวัลลภรักษาพระองค์ (เลข 105177) |
+| `ฉก.ทม.รอ.` | 1 | `ROYAL_PAGE_GUARD` (ทม.รอ.) + `is_special_forces = true` — ทหารมหาดเล็กราชวัลลภรักษาพระองค์ (เลข 105177) |
 | `ทบ., ฉก.ทม.รอ.` | 1 | ผู้กรอกติ๊กคร่อม 2 ช่อง — หมายความว่า **ทบ. ที่เป็น ฉก.** → `ARMY` + `is_special_forces = true` (ค่าผสมที่มี `ฉก.` ไม่ map เป็น ROYAL_PAGE_GUARD — เฉพาะค่าตรงตัว `ฉก.ทม.รอ.` เท่านั้น) (เลข 105210) |
 
 > **หมายเหตุ ฉก.**: enum `ROYAL_PAGE_GUARD` เก็บไว้เผื่อกรณีจำพวกเป็น `ฉก.ทม.รอ.` ตรงตัว (ปัจจุบันยังไม่มีข้อมูล) — ค่าผสม `ทบ., ฉก.ทม.รอ.` หมายถึง ทบ. ที่เป็น ฉก. → type `ARMY` + isSpecialForces `true`
@@ -1306,7 +1306,7 @@ Reference: §5.1, §9
 
 ### Stage 13 — Enum จำพวกเป็น English keys + แก้ mapping 3 ค่า (2026-09-21)
 
-- [x] 13.1 `PersonnelType` เปลี่ยนค่าเป็นอังกฤษทั้งชุด (`ARMY/NAVY/AIR_FORCE/POLICE/MOD/JOINT_FORCE/ROYAL_PAGE_GUARD/FOREIGN`) + `PERSONNEL_TYPE_LABELS` แสดงไทย (ทบ./ทร./ทอ./ตร./กลาโหม/บก.ทท./ฉก.ทม.รอ./มิตรประเทศ) (2026-09-21)
+- [x] 13.1 `PersonnelType` เปลี่ยนค่าเป็นอังกฤษทั้งชุด (`ARMY/NAVY/AIR_FORCE/POLICE/MOD/JOINT_FORCE/ROYAL_PAGE_GUARD/FOREIGN`) + `PERSONNEL_TYPE_LABELS` แสดงไทย (ทบ./ทร./ทอ./ตร./กลาโหม/บก.ทท./ทม.รอ./มิตรประเทศ) (2026-09-21)
 - [x] 13.2 แก้ mapping ตามหน่วยงานจริง: `สป.` → MOD (กลาโหม ไม่ใช่ ทบ.), `บก.ทท.` → JOINT_FORCE (กองบัญชาการกองทัพไทย — joint), `ฉก.ทม.รอ.` → ROYAL_PAGE_GUARD (ทหารมหาดเล็กราชวัลลภรักษาพระองค์ — ไม่ใช่ ทหารม้า/ทบ.) — ค่าผสมที่มี `ฉก.` → refineType() เป็น ROYAL_PAGE_GUARD (2026-09-21)
 - [x] 13.3 Migrate DB: `npm run migrate:personnel-type` — recreate Postgres enum `${ENV}_personnel_type_enum` + cast ข้อมูลเดิม (dev แล้ว: 229 ARMY / 3 NAVY / 3 AIR_FORCE / 5 POLICE / 11 FOREIGN) · idempotent รันซ้ำได้ · ⚠️ หยุดแอปก่อนรันบน server อื่น (2026-09-21)
 - [x] 13.4 FE (cgsc105-personnel-fe): `PERSONNEL_TYPES` เป็น English keys + `PERSONNEL_TYPE_LABELS`/`personnelTypeLabel()` — ฟอร์มจำพวก, filter (ตารางแอดมิน/รายชื่อเพื่อน), ตาราง, CSV export, profile chip, dashboard donut (สี/order ตาม key อังกฤษ) (2026-09-21)

@@ -29,7 +29,7 @@ export const PERSONNEL_TYPE_LABELS: Record<PersonnelType, string> = {
   [PersonnelType.POLICE]: 'ตร.',
   [PersonnelType.MOD]: 'กลาโหม',
   [PersonnelType.JOINT_FORCE]: 'บก.ทท.',
-  [PersonnelType.ROYAL_PAGE_GUARD]: 'ฉก.ทม.รอ.',
+  [PersonnelType.ROYAL_PAGE_GUARD]: 'ทม.รอ.',
   [PersonnelType.FOREIGN]: 'มิตรประเทศ',
 }
 
