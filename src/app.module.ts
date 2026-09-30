@@ -35,6 +35,7 @@ import { UnitSummaryModule } from './modules/unit-summary/unit-summary.module';
 import { UnitPublicModule } from './modules/unit-public/unit-public.module';
 import { VoltraModule } from './modules/voltra/voltra.module';
 import { PersonnelModule } from './modules/personnel/personnel.module';
+import { PersonnelVehicleModule } from './modules/personnel-vehicle/personnel-vehicle.module';
 import { PersonnelGroupModule } from './modules/personnel-group/personnel-group.module';
 import { RoomModule } from './modules/room/room.module';
 import { PaymentModule } from './modules/payment/payment.module';
@@ -126,6 +127,7 @@ import { NotificationModule } from './modules/notification/notification.module';
     RoomModule,
     PaymentModule,
     Survey2Module,
+    PersonnelVehicleModule,
   ],
   providers: [
     {

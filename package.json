@@ -21,6 +21,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "deploy": "git pull && rm -rf dist tsconfig.build.tsbuildinfo && npm install && npm run build && pm2 restart army-area-be",
     "import:personnel": "node --env-file=.env -r ts-node/register -r tsconfig-paths/register scripts/import-personnel.ts",
+    "import:personnel-vehicles": "node --env-file=.env -r ts-node/register -r tsconfig-paths/register scripts/import-personnel-vehicles.ts",
     "upload:profile-images": "node --env-file=.env -r ts-node/register -r tsconfig-paths/register scripts/upload-profile-images.ts",
     "seed:personnel-admin": "node --env-file=.env -r ts-node/register -r tsconfig-paths/register scripts/seed-personnel-admin.ts",
     "migrate:personnel-type": "node --env-file=.env -r ts-node/register -r tsconfig-paths/register scripts/migrate-personnel-type-english.ts"

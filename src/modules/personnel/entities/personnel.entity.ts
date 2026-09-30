@@ -1,6 +1,7 @@
 import { PersonnelsGroup } from 'src/modules/personnel-group/entities/personnel-group.entity'
 import { Room } from 'src/modules/room/entities/room.entity'
 import { UserPayment } from 'src/modules/payment/entities/user-payment.entity'
+import { PersonnelVehicle } from 'src/modules/personnel-vehicle/entities/personnel-vehicle.entity'
 import { GlobalEntity } from 'src/utils/global-entity'
 import {
   Column,
@@ -157,4 +158,7 @@ export class Personnel extends GlobalEntity {
 
   @OneToMany(() => UserPayment, (payment) => payment.user)
   payments: UserPayment[]
+
+  @OneToMany(() => PersonnelVehicle, (vehicle) => vehicle.personnel)
+  vehicles: PersonnelVehicle[]
 }
